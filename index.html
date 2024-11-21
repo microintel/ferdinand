@@ -1,0 +1,244 @@
+<html>
+<head>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<title> ferdinand </title>
+<link rel="icon" type="image/png" href="ferdinand-favicon.png">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+<style type="text/css">
+body{
+
+background-image:url('https://raw.githubusercontent.com/microintel/endgram/main/photo/ferdinand-girl-bull.jpg');
+background-size:cover;
+background-repeat:no-repeat;
+background-attachment:fixed;
+}
+img{
+height:50px;
+}
+
+font{
+
+color:white;
+}
+
+.inps{
+display:flex;
+flex-direction:column;
+width:100%;
+position:relative;
+top:75%;
+gap:10px;
+z-index:2;
+justify-content:center;
+align-items:center;
+}
+.inps input{
+color:white;
+}
+
+input::file-selector-button {
+  font-weight: bold;
+  color:white;
+  padding: 0.9em;
+  border: 2px solid red;
+  border-radius: 8px;
+  background-color:transparent;
+  backdrop-filter: blur(1px);
+}
+.inps div{
+display:flex;
+width:100%;
+justify-content:space-around;
+padding-bottom:10px;
+}
+.inps div button{
+width:45%;
+font-weight: bold;
+padding:0.9em;
+border: 2px solid red;
+  border-radius: 8px;
+  background-color:transparent;
+  color:white;
+  transition:0.5s ease-in;
+  backdrop-filter: blur(1px);
+}
+
+.inps div button:hover{
+color:red;
+border:2px solid white;
+}
+
+.hea{
+display:flex;
+justify-content:space-between;
+align-items:center;
+padding:5px 5px;
+}
+
+.hea div{
+color:white;
+display:flex;
+justify-content:space-between;
+gap:20px;
+}
+.hea div i{
+font-size:1.5rem;
+
+}
+
+.hea div >i:active{
+color:red;
+}
+
+.tex{
+position:absolute;
+width:90%;
+margin:7px;
+padding:7px;
+height:60%;
+top:15%;
+z-index:3;
+background-color:transparent;
+backdrop-filter: blur(1px);
+display:flex;
+justify-content:center;
+align-items:center;
+}
+p{
+width:100%;
+height:100%;
+padding:7px;
+color:#f9f6f4;
+background-color:transparent;
+border:1.6px solid black;
+border-radius:10px;
+box-shadow: rgba(50, 50, 93, 0.25) 0px 50px 100px -20px, rgba(0, 0, 0, 0.3) 0px 30px 60px -30px, rgba(10, 37, 64, 0.35) 0px -2px 6px 0px inset;
+overflow-y:auto;
+
+}
+
+.loa{
+display:none;
+position:absolute;
+top:50%;
+left:50%;
+transform:translate(-50%,-50%);
+width:100px;
+height:100px;
+z-index:10;
+
+}
+
+</style>
+
+</head>
+
+
+<body>
+
+<img src="venom-load.gif" class="loa" id="lo">
+
+<div id="hhh" class="hea">
+<img src="https://raw.githubusercontent.com/microintel/endgram/main/photo/ferdinand-logo.png">
+<div>
+<i onclick="shr()" class="fa-solid fa-share-from-square"></i>
+<i onclick="pri()" class="fa-solid fa-file-arrow-down"></i> 
+</div>
+</div>
+
+<div id="ttex" class="tex">
+<p contenteditable="true" id="pyy"> Content Will Appear Here!</p>
+</div>
+
+<div id="inpp" class="inps">
+<input id="ii" type="file">
+<div>
+<button onclick="ennx('e')"> Conseal <i class="fa-solid fa-eye-slash"></i> </button>
+<button onclick="ennx('d')"> Reveal <i class="fa-solid fa-eye"></i>  </button>
+</div>
+</div>
+
+<script type="text/javascript">
+let pas="";
+function ennx(x){
+pas=prompt("Enter PassWord :- ");
+document.getElementById("inpp").style.filter="blur(10px)";
+document.getElementById("ttex").style.filter="blur(10px)";
+document.getElementById("hhh").style.filter="blur(10px)";
+document.getElementById("lo").style.display="block";
+if(x=='e'){setTimeout(enn,(Math.floor(Math.random()*7)+1)*1000);}
+if(x=='d'){setTimeout(ddd,(Math.floor(Math.random()*7)+1)*1000);}
+}
+
+
+
+document.getElementById("ii").addEventListener("change",(e)=>{
+
+let ff= e.target.files[0];
+
+let fi= new FileReader();
+
+fi.onload=(e)=>{
+document.getElementById("pyy").textContent=e.target.result;
+
+}
+fi.readAsText(ff);
+
+
+});
+
+
+function enn(){
+document.getElementById("inpp").style.filter="blur(0px)";
+document.getElementById("ttex").style.filter="blur(0px)";
+document.getElementById("hhh").style.filter="blur(0px)";
+document.getElementById("lo").style.display="none";
+let ddt=document.getElementById("pyy").textContent;
+
+let en= CryptoJS.AES.encrypt(ddt,pas).toString();
+document.getElementById("pyy").textContent=en;
+
+}
+
+function ddd(){
+let ddt=document.getElementById("pyy").textContent;
+document.getElementById("inpp").style.filter="blur(0px)";
+document.getElementById("ttex").style.filter="blur(0px)";
+document.getElementById("hhh").style.filter="blur(0px)";
+document.getElementById("lo").style.display="none";
+let en= CryptoJS.AES.decrypt(ddt,pas);
+document.getElementById("pyy").textContent=en.toString(CryptoJS.enc.Utf8);
+}
+
+function pri(){
+
+let con = document.getElementById("pyy").textContent;
+
+let bb= new Blob([con],{type:"text/plain"});
+
+let xx= document.createElement("a");
+
+xx.href=URL.createObjectURL(bb);
+xx.download="ferdinand.txt";
+xx.click();
+}
+
+async function shr() {
+  let con = document.getElementById("pyy").textContent;
+  let bb = new Blob([con], { type: "text/plain" });
+  let file = new File([bb], "ferdinand.txt", { type: "text/plain" });
+
+      navigator.share({
+        files: [file]
+          });
+}
+
+
+
+</script>
+
+</body>
+
+
+</html>
