@@ -144,7 +144,8 @@ z-index:10;
 <img src="https://raw.githubusercontent.com/microintel/endgram/main/photo/ferdinand-logo.png">
 <div>
 <i onclick="impo()" class="fa-solid fa-link"></i>
-<i onclick="shr()" class="fa-solid fa-share-from-square"></i>
+<i onclick="shr('ts')" class="fa-solid fa-share"></i>
+<i onclick="shr('fs')" class="fa-solid fa-share-from-square"></i>
 <i onclick="pri()" class="fa-solid fa-file-arrow-down"></i> 
 </div>
 </div>
@@ -216,8 +217,8 @@ document.getElementById("pyy").textContent=en.toString(CryptoJS.enc.Utf8);
 function pri(){
 
 let con = document.getElementById("pyy").textContent;
-let fina= prompt("Enter File Name or Click Cancel : ") || "ferdinand.txt";
-
+let fina= prompt("Enter File Name or Click Cancel : ");
+alert(fina);
 let bb= new Blob([con],{type:"text/plain"});
 
 let xx= document.createElement("a");
@@ -227,14 +228,21 @@ xx.download=fina;
 xx.click();
 }
 
-async function shr() {
+async function shr(x) {
   let con = document.getElementById("pyy").textContent;
+  if(x=='fs'){
   let bb = new Blob([con], { type: "text/plain" });
   let file = new File([bb], "ferdinand.txt", { type: "text/plain" });
 
       navigator.share({
         files: [file]
           });
+       }
+  else{
+  navigator.share({text:con});
+  
+  }
+          
 }
 
 
