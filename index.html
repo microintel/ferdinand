@@ -217,7 +217,7 @@ document.getElementById("pyy").textContent=en.toString(CryptoJS.enc.Utf8);
 function pri(){
 
 let con = document.getElementById("pyy").textContent;
-let fina= prompt("Enter File Name or Click Cancel : ");
+let fina= prompt("Enter File Name or Click Cancel : ") || "ferdinand.txt" ;
 
 let bb= new Blob([con],{type:"text/plain"});
 
