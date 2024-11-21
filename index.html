@@ -216,13 +216,14 @@ document.getElementById("pyy").textContent=en.toString(CryptoJS.enc.Utf8);
 function pri(){
 
 let con = document.getElementById("pyy").textContent;
+let fina= prompt("Enter File Name or Click Cancel : ") || "ferdinand.txt";
 
 let bb= new Blob([con],{type:"text/plain"});
 
 let xx= document.createElement("a");
 
 xx.href=URL.createObjectURL(bb);
-xx.download="ferdinand.txt";
+xx.download=fina;
 xx.click();
 }
 
