@@ -83,7 +83,7 @@ justify-content:space-between;
 gap:20px;
 }
 .hea div i{
-font-size:1.5rem;
+font-size:1.25rem;
 
 }
 
@@ -130,6 +130,7 @@ z-index:10;
 
 }
 
+
 </style>
 
 </head>
@@ -142,6 +143,7 @@ z-index:10;
 <div id="hhh" class="hea">
 <img src="https://raw.githubusercontent.com/microintel/endgram/main/photo/ferdinand-logo.png">
 <div>
+<i onclick="impo()" class="fa-solid fa-link"></i>
 <i onclick="shr()" class="fa-solid fa-share-from-square"></i>
 <i onclick="pri()" class="fa-solid fa-file-arrow-down"></i> 
 </div>
@@ -236,6 +238,15 @@ async function shr() {
 
 
 
+async function impo(){
+
+let userU= await prompt("Enter or Paste Link Here! : ");
+
+let fet= await fetch(userU);
+let fetCon= await fet.text();
+document.getElementById("pyy").textContent=fetCon;
+
+}
 </script>
 
 </body>
