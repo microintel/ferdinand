@@ -183,7 +183,7 @@ document.getElementById("pyy").contentEditable="true";
 let ff= e.target.files[0];
 
 if(ff.type.includes("text")){
-if(((ff.size/(1024*1024)) < 70)){
+if(((ff.size/(1024*1024)) < 50)){
 let fi= new FileReader();
 
 
@@ -194,12 +194,12 @@ fi.readAsText(ff);
 if(fi.readyState==1){document.getElementById("pyy").textContent= "Reading File Contents..."}
 }
 else{
-alert("Please Choose Text File Within \n\n 70MB");
+alert("Please Choose Text File Within \n\n 50MB");
 }
 
 } else if(ff.type.includes("image")){
 
-if (((ff.size/(1024*1024)) < 15)) {
+if (((ff.size/(1024*1024)) < 10)) {
 const ffir = new FileReader();
   ffir.onload = function (e) {
  const ffid = e.target.result;
@@ -211,7 +211,7 @@ const ffir = new FileReader();
   
   }
   else{
-  alert("Please Choose Image File Size Within \n\n15MB");
+  alert("Please Choose Image File Size Within \n\n10MB");
   }
 
 }else if(ff.type.includes("audio") ){
