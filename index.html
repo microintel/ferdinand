@@ -183,7 +183,7 @@ document.getElementById("pyy").contentEditable="true";
 let ff= e.target.files[0];
 
 if(ff.type.includes("text")){
-if(((ff.size/(1024*1024)) < 70)){
+if(((ff.size/(1024*1024)) < 9)){
 let fi= new FileReader();
 
 
@@ -194,7 +194,7 @@ fi.readAsText(ff);
 if(fi.readyState==1){document.getElementById("pyy").textContent= "Reading File Contents..."}
 }
 else{
-alert("Please Choose Text File Within \n\n 70MB");
+alert("Please Choose Text File Within \n\n 9MB");
 }
 
 } else if(ff.type.includes("image")){
