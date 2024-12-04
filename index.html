@@ -182,6 +182,9 @@ function spea(x) {
     speechSynthesis.speak(spp);
     x.id = "pause";
     x.className="fa-solid fa-pause";
+    spp.onend = function () {
+    x.className="fa-solid fa-play";
+    };
    
   } else {
     if (speechSynthesis.speaking) {
@@ -189,6 +192,9 @@ function spea(x) {
     }
     x.id = "play";
     x.className="fa-solid fa-play";
+    spp.onend = function () {
+    x.className="fa-solid fa-play";
+    };
    
   }
 }
