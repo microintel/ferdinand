@@ -172,8 +172,8 @@ document.getElementById("inpp").style.filter="blur(10px)";
 document.getElementById("ttex").style.filter="blur(10px)";
 document.getElementById("hhh").style.filter="blur(10px)";
 document.getElementById("lo").style.display="block";
-if(x=='e'){setTimeout(enn,10000);}
-if(x=='d'){setTimeout(ddd,10000);}
+if(x=='e'){setTimeout(enn,(Math.floor(Math.random()*7)+1)*1000);}
+if(x=='d'){setTimeout(ddd,(Math.floor(Math.random()*7)+1)*1000);}
 }
 
 
@@ -183,7 +183,7 @@ document.getElementById("pyy").contentEditable="true";
 let ff= e.target.files[0];
 
 if(ff.type.includes("text")){
-if(((ff.size/(1024*1024)) < 9)){
+if(((ff.size/(1024*1024)) < 10)){
 let fi= new FileReader();
 
 
@@ -194,7 +194,7 @@ fi.readAsText(ff);
 if(fi.readyState==1){document.getElementById("pyy").textContent= "Reading File Contents..."}
 }
 else{
-alert("Please Choose Text File Within \n\n 9MB");
+alert("Please Choose Text File Within \n\n 10MB");
 }
 
 } else if(ff.type.includes("image")){
@@ -226,7 +226,6 @@ const ffar = new FileReader();
     };
   ffar.readAsDataURL(ff);
   document.getElementById("pyy").textContent="Reading Audio File...";
-  if(fi.readyState==1){document.getElementById("pyy").textContent= "Reading File Contents..."}
   
   }else{
   alert("Please Choose Audio File Size Within \n\n 2MB");
@@ -248,8 +247,7 @@ document.getElementById("hhh").style.filter="blur(0px)";
 document.getElementById("lo").style.display="none";
 let ddt=document.getElementById("pyy").textContent;
 
-let en= CryptoJS.AES.encrypt(ddt,pas).toString();
-document.getElementById("pyy").textContent=en;
+document.getElementById("pyy").textContent= CryptoJS.AES.encrypt(ddt,pas).toString();
 
 }
 
