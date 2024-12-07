@@ -56,7 +56,7 @@ align-items:center;
 padding-bottom:10px;
 }
 .inps div button{
-width:40%;
+width:35%;
 font-weight: bold;
 padding:0.9em;
 border: 2px solid red;
@@ -86,7 +86,7 @@ justify-content:space-between;
 gap:20px;
 }
 .hea div i{
-font-size:1.25rem;
+font-size:1rem;
 
 }
 
@@ -151,6 +151,7 @@ z-index:10;
 
 <i onclick="impo()" class="fa-solid fa-link"></i>
 <i onclick="shr('ts')" class="fa-solid fa-share"></i>
+
 <i onclick="shr('fs')" class="fa-solid fa-share-from-square"></i>
 <i onclick="pri()" class="fa-solid fa-file-arrow-down"></i> 
 
@@ -167,6 +168,7 @@ z-index:10;
 <button onclick="ennx('e')"> Conceal <i class="fa-solid fa-eye-slash"></i> </button>
 <button onclick="ennx('d')"> Reveal <i class="fa-solid fa-eye"></i>  </button>
 <i id="play" onclick="spea(this)" style="font-size:1.8rem;color:white;" class="fa-solid fa-play"></i>
+<i id="xxxf" onclick="vvpl(this)" style="font-size:1rem;color:transparent;" class="fa-solid fa-heart"></i>
 </div>
 </div>
 
@@ -174,7 +176,42 @@ z-index:10;
 
 
 
+
+function vvpl(xv){
+if(xv.id=="xxxf"){
+let dddt = document.getElementById("pyy").textContent;
+
+if(dddt.startsWith("data:video/")){
+
+let iaee=document.createElement("video");
+iaee.id="videoid";
+iaee.src=dddt;
+iaee.style.width="98%";
+iaee.style.height="auto";
+iaee.style.margin="6px";
+document.getElementById("pyy").contentEditable="false";
+document.getElementById("pyy").textContent="";
+document.getElementById("pyy").appendChild(iaee);
+
+}
+xv.id="mmmf";
+}
+/*
+if(xv.id=="mmmf"){
+
+if(document.getElementById("videoid").paused){
+document.getElementById("videoid").play();
+}
+else{
+document.getElementById("videoid").pause();
+}
+
+}
+*/
+}
+
 function spea(x) {
+
   if (x.id === "play") {
   let sv = document.getElementById("pyy").textContent;
   let spp = new SpeechSynthesisUtterance(sv);
@@ -216,7 +253,7 @@ document.getElementById("pyy").contentEditable="true";
 let ff= e.target.files[0];
 
 if(ff.type.includes("text")){
-if(((ff.size/(1024*1024)) < 10)){
+if(((ff.size/(1024*1024)) < 20)){
 let fi= new FileReader();
 
 
@@ -259,6 +296,24 @@ const ffar = new FileReader();
     };
   ffar.readAsDataURL(ff);
   document.getElementById("pyy").textContent="Reading Audio File...";
+  
+  }else{
+  alert("Please Choose Audio File Size Within \n\n 2MB");
+  }
+
+}
+else if(ff.type.includes("video") ){
+
+if (((ff.size/(1024*1024)) < 20)) {
+const ffarv = new FileReader();
+  ffarv.onload = function (e) {
+  let ffadv = e.target.result;
+ document.getElementById("pyy").textContent=ffadv;
+// document.getElementById("pyy").contentEditable="false";
+  
+    };
+  ffarv.readAsDataURL(ff);
+  document.getElementById("pyy").textContent="Reading Video File...";
   
   }else{
   alert("Please Choose Audio File Size Within \n\n 2MB");
@@ -373,6 +428,24 @@ else{
 document.getElementById("audioid").pause();
 }
 });
+
+
+
+
+
+document.getElementById("pyy").addEventListener("click",()=>{
+
+
+if(document.getElementById("videoid").paused){
+document.getElementById("videoid").play();
+}
+else{
+document.getElementById("videoid").pause();
+}
+});
+
+
+
 
 </script>
 
