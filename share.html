@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shared Content</title>
+</head>
+<body>
+    <h1>Shared File Content</h1>
+    <p id="file-content">Waiting for content...</p>
+
+    <script>
+        // Read the shared file
+        if ('launchQueue' in window && 'files' in LaunchParams.prototype) {
+            launchQueue.setConsumer((launchParams) => {
+                const files = launchParams.files;
+                if (files.length > 0) {
+                    files[0].getFile().then((file) => {
+                        const reader = new FileReader();
+                        reader.onload = () => {
+                            document.getElementById('file-content').textContent = reader.result;
+                        };
+                        reader.readAsText(file);
+                    });
+                }
+            });
+        }
+    </script>
+</body>
+</html>
