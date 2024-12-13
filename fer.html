@@ -1,0 +1,514 @@
+<html>
+<head>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<title> ferdinand </title>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
+  <link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" href="ferdinand-favicon.png">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+<style type="text/css">
+body{
+
+background-image:url('https://raw.githubusercontent.com/microintel/endgram/main/photo/ferdinand-girl-bull.jpg');
+background-size:cover;
+background-repeat:no-repeat;
+background-attachment:fixed;
+}
+img{
+height:50px;
+}
+
+font{
+
+color:white;
+}
+
+.inps{
+display:flex;
+flex-direction:column;
+width:100%;
+position:relative;
+top:75%;
+gap:10px;
+z-index:2;
+justify-content:center;
+align-items:center;
+}
+.inps input{
+color:white;
+}
+
+input::file-selector-button {
+  font-weight: bold;
+  color:white;
+  padding: 0.9em;
+  border: 2px solid red;
+  border-radius: 8px;
+  background-color:transparent;
+  backdrop-filter: blur(1px);
+}
+.inps div{
+display:flex;
+width:100%;
+justify-content:space-around;
+align-items:center;
+padding-bottom:10px;
+}
+.inps div button{
+width:35%;
+font-weight: bold;
+padding:0.9em;
+border: 2px solid red;
+  border-radius: 8px;
+  background-color:transparent;
+  color:white;
+  transition:0.5s ease-in;
+  backdrop-filter: blur(1px);
+}
+
+.inps div button:hover{
+color:red;
+border:2px solid white;
+}
+
+.hea{
+display:flex;
+justify-content:space-between;
+align-items:center;
+padding:5px 5px;
+}
+
+.hea div{
+color:white;
+display:flex;
+justify-content:space-between;
+gap:20px;
+}
+.hea div i{
+font-size:1rem;
+
+}
+
+.hea div >i:active{
+color:red;
+}
+
+.tex{
+position:absolute;
+width:90%;
+margin:7px;
+padding:7px;
+height:60%;
+top:15%;
+z-index:3;
+background-color:transparent;
+backdrop-filter: blur(1px);
+display:flex;
+justify-content:center;
+align-items:center;
+}
+p{
+width:100%;
+height:100%;
+padding:7px;
+color:#f9f6f4;
+background-color:transparent;
+border:1.6px solid black;
+border-radius:10px;
+box-shadow: rgba(50, 50, 93, 0.25) 0px 50px 100px -20px, rgba(0, 0, 0, 0.3) 0px 30px 60px -30px, rgba(10, 37, 64, 0.35) 0px -2px 6px 0px inset;
+overflow-y:auto;
+position:relative;
+}
+
+.bbtt{
+    display:none;
+    }
+    
+.loa{
+display:none;
+position:absolute;
+top:50%;
+left:50%;
+transform:translate(-50%,-50%);
+width:100px;
+height:100px;
+z-index:10;
+
+}
+
+@media screen and (min-width: 768px) {
+    body {
+        background-image: url('https://wallpaperbat.com/img/459630-4k-thor-wallpaper-top-free-4k-thor-background-thor-wallpaper-dark-wallpaper-hd-dark-wallpaper.jpg');
+        background-attachment: fixed;
+        background-size: cover;
+        background-position: center;
+        background-color: unset;
+        background-repeat:no-repeat;
+        padding-left:50%;
+    }
+    p{
+    border:1px solid red;
+    color:white;
+    }
+    .hea img,#play,.bbt{
+    display:none;
+    }
+    .tex{
+    height:77%;
+    }
+    
+    .inps{
+    display:flex;
+    flex-direction:row;
+    width:100%;
+    position:relative;
+    top:99%;
+    z-index:2;
+    justify-content:center;
+    align-items:flex-end;
+    }
+    .bbtt{
+    display:block;
+    width:45%;
+    font-weight: bold;
+    padding:0.9em;
+    border: 2px solid red;
+    border-radius: 8px;
+    background-color:transparent;
+    color:white;
+    transition:0.5s ease-in;
+    backdrop-filter: blur(1px);
+    }
+    .inpppp{
+    display:none;
+    }
+    
+    
+    
+    
+    
+    
+  }
+
+
+
+</style>
+
+</head>
+
+
+<body>
+
+<img src="venom-load.gif" class="loa" id="lo">
+<div id="hhh" class="hea">
+<a href="https://youtu.be/pihJVwap7iI?si=ixIjT8pjO41Z8f2v"><img src="https://raw.githubusercontent.com/microintel/endgram/main/photo/ferdinand-logo.png"></a>
+<div>
+
+<i onclick="impo()" class="fa-solid fa-link"></i>
+<i onclick="shr('ts')" class="fa-solid fa-share"></i>
+
+<i onclick="shr('fs')" class="fa-solid fa-share-from-square"></i>
+<i onclick="pri()" class="fa-solid fa-file-arrow-down"></i> 
+
+</div>
+</div>
+
+<div id="ttex" class="tex">
+<p contenteditable="true" id="pyy"> Content Will Appear Here!   </p>
+</div>
+
+<div id="inpp" class="inps">
+<input id="ii" type="file">
+<button class="bbtt" onclick="ennx('e')"> Conceal <i class="fa-solid fa-eye-slash"></i> </button>
+<button class="bbtt" onclick="ennx('d')"> Reveal <i class="fa-solid fa-eye"></i>  </button>
+
+<div id="inpppp">
+<button class="bbt" onclick="ennx('e')"> Conceal <i class="fa-solid fa-eye-slash"></i> </button>
+<button class="bbt" onclick="ennx('d')"> Reveal <i class="fa-solid fa-eye"></i>  </button>
+<i id="play" onclick="spea(this)" style="font-size:1.8rem;color:white;" class="fa-solid fa-play"></i>
+<i id="xxxf" onclick="vvpl(this)" style="font-size:1rem;color:transparent;" class="fa-solid fa-heart"></i>
+</div>
+</div>
+
+<script type="text/javascript">
+
+
+
+
+function vvpl(xv){
+if(xv.id=="xxxf"){
+let dddt = document.getElementById("pyy").textContent;
+
+if(dddt.startsWith("data:video/")){
+
+let iaee=document.createElement("video");
+iaee.id="videoid";
+iaee.src=dddt;
+iaee.style.width="98%";
+iaee.style.height="auto";
+iaee.style.margin="6px";
+document.getElementById("pyy").contentEditable="false";
+document.getElementById("pyy").textContent="";
+document.getElementById("pyy").appendChild(iaee);
+
+}
+xv.id="mmmf";
+}
+/*
+if(xv.id=="mmmf"){
+
+if(document.getElementById("videoid").paused){
+document.getElementById("videoid").play();
+}
+else{
+document.getElementById("videoid").pause();
+}
+
+}
+*/
+}
+
+function spea(x) {
+
+  if (x.id === "play") {
+  let sv = document.getElementById("pyy").textContent;
+  let spp = new SpeechSynthesisUtterance(sv);
+  spp.lang = "kn-IN";
+    speechSynthesis.speak(spp);
+    x.id = "pause";
+    x.className="fa-solid fa-pause";
+    spp.onend = function () {
+    x.className="fa-solid fa-play";
+    };
+   
+  } else {
+    if (speechSynthesis.speaking) {
+      speechSynthesis.cancel();
+    }
+    x.id = "play";
+    x.className="fa-solid fa-play";
+    spp.onend = function () {
+    x.className="fa-solid fa-play";
+    };
+   
+  }
+}
+let pas="";
+function ennx(x){
+pas=prompt("Enter PassWord :- ");
+document.getElementById("inpp").style.filter="blur(10px)";
+document.getElementById("ttex").style.filter="blur(10px)";
+document.getElementById("hhh").style.filter="blur(10px)";
+document.getElementById("lo").style.display="block";
+if(x=='e'){setTimeout(enn,11000);}
+if(x=='d'){setTimeout(ddd,11000);}
+}
+
+
+
+document.getElementById("ii").addEventListener("change",(e)=>{
+document.getElementById("pyy").contentEditable="true";
+let ff= e.target.files[0];
+
+if(ff.type.includes("text")){
+if(((ff.size/(1024*1024)) < 20)){
+let fi= new FileReader();
+
+
+fi.onload=(e)=>{
+document.getElementById("pyy").textContent=e.target.result;
+}
+fi.readAsText(ff);
+if(fi.readyState==1){document.getElementById("pyy").textContent= "Reading File Contents..."}
+}
+else{
+alert("Please Choose Text File Within \n\n 10MB");
+}
+
+} else if(ff.type.includes("image")){
+
+if (((ff.size/(1024*1024)) < 6)) {
+const ffir = new FileReader();
+  ffir.onload = function (e) {
+ const ffid = e.target.result;
+ 
+ document.getElementById("pyy").textContent=ffid;
+  ennx("e");
+    };
+  ffir.readAsDataURL(ff);
+  document.getElementById("pyy").textContent="Reading Image File...";
+  }
+  else{
+  alert("Please Choose Image File Size Within \n\n6MB");
+  }
+
+}else if(ff.type.includes("audio") ){
+
+if (((ff.size/(1024*1024)) < 2)) {
+const ffar = new FileReader();
+  ffar.onload = function (e) {
+ const ffad = e.target.result;
+ document.getElementById("pyy").textContent=ffad;
+ document.getElementById("pyy").contentEditable="false";
+  ennx("e");
+    };
+  ffar.readAsDataURL(ff);
+  document.getElementById("pyy").textContent="Reading Audio File...";
+  
+  }else{
+  alert("Please Choose Audio File Size Within \n\n 2MB");
+  }
+
+}
+else if(ff.type.includes("video") ){
+
+if (((ff.size/(1024*1024)) < 20)) {
+const ffarv = new FileReader();
+  ffarv.onload = function (e) {
+  let ffadv = e.target.result;
+ document.getElementById("pyy").textContent=ffadv;
+// document.getElementById("pyy").contentEditable="false";
+  
+    };
+  ffarv.readAsDataURL(ff);
+  document.getElementById("pyy").textContent="Reading Video File...";
+  
+  }else{
+  alert("Please Choose Audio File Size Within \n\n 2MB");
+  }
+
+}
+else{
+alert("Ferdinand Is Developed For Text,Image,Audio Files Only..");
+}
+
+
+});
+
+
+function enn(){
+document.getElementById("inpp").style.filter="blur(0px)";
+document.getElementById("ttex").style.filter="blur(0px)";
+document.getElementById("hhh").style.filter="blur(0px)";
+document.getElementById("lo").style.display="none";
+let ddt=document.getElementById("pyy").textContent;
+
+document.getElementById("pyy").textContent= CryptoJS.AES.encrypt(ddt,pas).toString();
+
+}
+
+function ddd(){
+let ddt=document.getElementById("pyy").textContent;
+document.getElementById("inpp").style.filter="blur(0px)";
+document.getElementById("ttex").style.filter="blur(0px)";
+document.getElementById("hhh").style.filter="blur(0px)";
+document.getElementById("lo").style.display="none";
+let en= CryptoJS.AES.decrypt(ddt,pas);
+document.getElementById("pyy").textContent=en.toString(CryptoJS.enc.Utf8);
+let pyyte=document.getElementById("pyy").textContent;
+if(pyyte.startsWith("data:image/")){
+    
+let ie=document.createElement("img");
+ie.src=pyyte;
+ie.style.width="98%";
+ie.style.height="auto";
+ie.style.margin="6px";
+
+document.getElementById("pyy").textContent="";
+document.getElementById("pyy").appendChild(ie);
+}
+
+if(pyyte.startsWith("data:audio/")){
+
+let iae=document.createElement("audio");
+iae.id="audioid";
+iae.src=pyyte;
+
+
+document.getElementById("pyy").contentEditable="false";
+document.getElementById("pyy").textContent="  Click here To Play / Pause...";
+document.getElementById("pyy").appendChild(iae);
+
+}
+}
+
+function pri(){
+
+let con = document.getElementById("pyy").textContent;
+let fina= prompt("Enter File Name or Click Cancel : ") || "ferdinand.txt" ;
+
+let bb= new Blob([con],{type:"text/plain"});
+
+let xx= document.createElement("a");
+
+xx.href=URL.createObjectURL(bb);
+xx.download=fina;
+xx.click();
+}
+
+async function shr(x) {
+  let con = document.getElementById("pyy").textContent;
+  if(x=='fs'){
+  let bb = new Blob([con], { type: "text/plain" });
+  let file = new File([bb], "ferdinand.txt", { type: "text/plain" });
+
+      navigator.share({
+        files: [file]
+          });
+       }
+  else{
+  navigator.share({text:con});
+  
+  }
+          
+}
+
+
+
+async function impo(){
+
+let userU= await prompt("Enter or Paste Text File Link Here! : ");
+
+let fet= await fetch(userU);
+let fetCon= await fet.text();
+document.getElementById("pyy").textContent=fetCon;
+
+}
+
+
+
+
+document.getElementById("pyy").addEventListener("click",()=>{
+if(document.getElementById("audioid").paused){
+document.getElementById("audioid").play();
+}
+else{
+document.getElementById("audioid").pause();
+}
+});
+
+
+
+
+
+document.getElementById("pyy").addEventListener("click",()=>{
+
+
+if(document.getElementById("videoid").paused){
+document.getElementById("videoid").play();
+}
+else{
+document.getElementById("videoid").pause();
+}
+});
+
+
+
+
+</script>
+
+</body>
+
+
+</html>
