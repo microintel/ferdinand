@@ -25,8 +25,8 @@
   "short_name": "Ferdinand",
   "share_target": {
     "action": "/ferdinand/index.html",
-    "method": "POST",
-    "enctype": "multipart/form-data",
+    "method": "GET",
+"enctype": "application/x-www-form-urlencoded"
     "params": {
       "title": "title",
       "text": "text",
