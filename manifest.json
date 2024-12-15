@@ -26,14 +26,10 @@
   "share_target": {
     "action": "/ferdinand/index.html",
     "method": "GET",
-"enctype": "application/x-www-form-urlencoded"
+    "enctype": "application/x-www-form-urlencoded",
     "params": {
       "title": "title",
-      "text": "text",
-      "files": [{
-        "name": "file",
-        "accept": ["text/plain"]
-      }]
+      "text": "text"
     }
   }
 }
