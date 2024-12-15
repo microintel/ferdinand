@@ -180,7 +180,14 @@ z-index:10;
 <i id="xxxf" onclick="vvpl(this)" style="font-size:1rem;color:transparent;" class="fa-solid fa-heart"></i>
 </div>
 </div>
+<script>
+    const urlP = new URLSearchParams(window.location.search);
+    const shTt = urlP.get('text');
 
+    if (shTt) {
+      document.getElementById('pyy').textContent = shTt;
+    }
+</script>
 <script type="text/javascript">
 
 
