@@ -1,185 +1,545 @@
-<html>
+<!doctype html>
+<html lang="en">
 <head>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-<title> ferdinand </title>
-  
-<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
-  <link rel="manifest" href="manifest.json">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
+<title>Ferdinand</title>
+<link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/png" href="ferdinand-favicon.png">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
-<style type="text/css">
-body{
-
-background-image:url('https://raw.githubusercontent.com/microintel/endgram/main/photo/ferdinand-girl-bull.jpg');
-background-size:cover;
-background-repeat:no-repeat;
-background-attachment:fixed;
-}
-img{
-height:50px;
-}
-
-font{
-
-color:white;
-}
-
-.inps{
-display:flex;
-flex-direction:column;
-width:100%;
-position:relative;
-top:75%;
-gap:10px;
-z-index:2;
-justify-content:center;
-align-items:center;
-}
-.inps input{
-color:white;
-}
-
-input::file-selector-button {
-  font-weight: bold;
-  color:white;
-  padding: 0.9em;
-  border: 2px solid red;
-  border-radius: 8px;
-  background-color:transparent;
-  backdrop-filter: blur(1px);
-}
-.inps div{
-display:flex;
-width:100%;
-justify-content:space-around;
-align-items:center;
-padding-bottom:10px;
-}
-.inps div button{
-width:35%;
-font-weight: bold;
-padding:0.9em;
-border: 2px solid red;
-  border-radius: 8px;
-  background-color:transparent;
-  color:white;
-  transition:0.5s ease-in;
-  backdrop-filter: blur(1px);
-}
-
-.inps div button:hover{
-color:red;
-border:2px solid white;
-}
-
-.hea{
-display:flex;
-justify-content:space-between;
-align-items:center;
-padding:5px 5px;
-}
-
-.hea div{
-color:white;
-display:flex;
-justify-content:space-between;
-gap:20px;
-}
-.hea div i{
-font-size:1rem;
-
-}
-
-.hea div >i:active{
-color:red;
-}
-
-.tex{
-position:absolute;
-width:90%;
-margin:7px;
-padding:7px;
-height:60%;
-top:15%;
-z-index:3;
-background-color:transparent;
-backdrop-filter: blur(1px);
-display:flex;
-justify-content:center;
-align-items:center;
-}
-p{
-width:100%;
-height:100%;
-padding:7px;
-color:#f9f6f4;
-background-color:transparent;
-border:1.6px solid black;
-border-radius:10px;
-box-shadow: rgba(50, 50, 93, 0.25) 0px 50px 100px -20px, rgba(0, 0, 0, 0.3) 0px 30px 60px -30px, rgba(10, 37, 64, 0.35) 0px -2px 6px 0px inset;
-overflow-y:auto;
-position:relative;
-}
-
-.loa{
-display:none;
-position:absolute;
-top:50%;
-left:50%;
-transform:translate(-50%,-50%);
-width:100px;
-height:100px;
-z-index:10;
-
-}
-
-@media screen and (min-width: 768px) {
-    body {
-        background-image: url('https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQVnnbM1iH4b2u3i44RBmYHo-S0CBwvsfJ6tQ&usqp=CAU');
-        background-attachment: fixed;
-        background-size: cover;
-        background-position: center;
-        background-color: unset;
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+  /* Apply saved theme before first paint to avoid a flash of the wrong theme. Default: dark. */
+  (function(){
+    try{
+      var t = localStorage.getItem('fer-theme');
+      document.documentElement.setAttribute('data-theme', t === 'light' ? 'light' : 'dark');
+    }catch(e){
+      document.documentElement.setAttribute('data-theme','dark');
     }
+  })();
+</script>
+<style>
+:root,
+:root[data-theme="dark"]{
+  --ink:#14181f;
+  --ink-2:#1b2029;
+  --ink-3:#232935;
+  --line:#2c3240;
+  --paper:#f6f4ee;
+  --paper-strip:#efebe0;
+  --paper-line:#dcd6c6;
+  --paper-hint:#9a9382;
+  --text-hi:#f1efe8;
+  --text-lo:#8a92a3;
+  --text-doc:#1d1c18;
+  --text-doc-lo:#6b6455;
+  --text-doc-hi:#2b2a25;
+  --ember:#b0442f;
+  --ember-hi:#c85640;
+  --radius:4px;
+  --sans:'Inter',system-ui,-apple-system,sans-serif;
+  --serif:'Source Serif 4',Georgia,serif;
+  --mono:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+  color-scheme:dark;
+}
+
+/* light theme: warm off-white surfaces, never pure #fff */
+:root[data-theme="light"]{
+  --ink:#eae7dd;
+  --ink-2:#f1eee4;
+  --ink-3:#e3dfd0;
+  --line:#d8d2c0;
+  --paper:#faf8f1;
+  --paper-strip:#f1ede1;
+  --paper-line:#ded7c3;
+  --paper-hint:#8f8874;
+  --text-hi:#2a2924;
+  --text-lo:#6e6a5e;
+  --text-doc:#211f1a;
+  --text-doc-lo:#6b6455;
+  --text-doc-hi:#2b2a25;
+  --ember:#a83d29;
+  --ember-hi:#8f3222;
+  --radius:4px;
+  --sans:'Inter',system-ui,-apple-system,sans-serif;
+  --serif:'Source Serif 4',Georgia,serif;
+  --mono:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+  color-scheme:light;
+}
+
+*{box-sizing:border-box;}
+
+html{
+  height:100%;
+  -webkit-text-size-adjust:100%;
+  text-size-adjust:100%;
+  overflow:hidden;
+}
+
+body{
+  height:100%;
+  height:100dvh;
+  margin:0;
+  background:var(--ink);
+  color:var(--text-hi);
+  font-family:var(--sans);
+  transition:background .2s ease, color .2s ease;
+}
+
+body{
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+  overscroll-behavior:none;
+}
+
+/* header */
+.hea{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:14px 20px;
+  border-bottom:1px solid var(--line);
+  background:var(--ink-2);
+  flex-wrap:wrap;
+  gap:10px;
+  flex:0 0 auto;
+}
+
+.brand{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  text-decoration:none;
+  color:var(--text-hi);
+  min-width:0;
+}
+
+.brand-mark{
+  height:28px;
+  width:auto;
+  display:block;
+  object-fit:contain;
+  flex-shrink:0;
+}
+
+.brand-name{
+  font-family:var(--serif);
+  font-weight:600;
+  font-size:1.15rem;
+  letter-spacing:0.01em;
+  white-space:nowrap;
+}
+
+.toolbar{
+  display:flex;
+  align-items:center;
+  gap:4px;
+  flex-shrink:0;
+}
+
+.toolbar i{
+  width:36px;
+  height:36px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:var(--text-lo);
+  font-size:0.95rem;
+  border:1px solid transparent;
+  border-radius:var(--radius);
+  cursor:pointer;
+  touch-action:manipulation;
+  -webkit-tap-highlight-color:transparent;
+  user-select:none;
+  transition:color .15s ease, border-color .15s ease, background .15s ease;
+}
+
+.toolbar i:hover{
+  color:var(--ember-hi);
+  border-color:var(--line);
+  background:var(--ink-3);
+}
+
+.toolbar i:active{
+  color:var(--ember);
+}
+
+/* stage */
+.stage{
+  flex:1;
+  min-height:0;
+  display:flex;
+  flex-direction:column;
+  width:100%;
+  max-width:820px;
+  margin:0 auto;
+  padding:20px;
+  gap:16px;
+  position:relative;
+  overflow:hidden;
+}
+
+/* document card */
+.tex{
+  flex:1;
+  min-height:0;
+  display:flex;
+  flex-direction:column;
+  background:var(--paper);
+  border:1px solid var(--paper-line);
+  border-radius:var(--radius);
+  box-shadow:0 1px 0 rgba(0,0,0,.4), 0 20px 40px -24px rgba(0,0,0,.6);
+  overflow:hidden;
+  transition:filter .15s ease, background .2s ease, border-color .2s ease;
+}
+
+.doc-strip{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:10px 18px;
+  border-bottom:1px solid var(--paper-line);
+  background:var(--paper-strip);
+  font-family:var(--sans);
+  font-size:0.72rem;
+  letter-spacing:0.08em;
+  text-transform:uppercase;
+  color:var(--text-doc-lo);
+  flex:0 0 auto;
+  transition:background .2s ease, border-color .2s ease;
+}
+
+.doc-strip .doc-title{
+  font-weight:600;
+  color:var(--text-doc-hi);
+}
+
+.doc-strip .doc-hint{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  color:var(--ember);
+  font-weight:600;
+}
+
+p#pyy{
+  flex:1;
+  min-height:0;
+  margin:0;
+  padding:22px;
+  font-family:var(--mono);
+  font-size:16px;
+  line-height:1.65;
+  color:var(--text-doc);
+  background:transparent;
+  border:none;
+  outline:none;
+  overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+  overscroll-behavior:contain;
+  overflow-wrap:anywhere;
+  word-break:break-word;
+}
+
+p#pyy:empty::before{
+  content:"Content will appear here.";
+  color:var(--paper-hint);
+}
+
+p#pyy img,
+p#pyy video{
+  display:block;
+  max-width:100%;
+  height:auto;
+  border-radius:2px;
+  margin:0 auto;
+}
+
+p#pyy audio{
+  display:block;
+  width:100%;
+}
+
+/* controls */
+.inps{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  flex:0 0 auto;
+  transition:filter .15s ease;
+}
+
+.file-field{
+  display:flex;
+}
+
+.file-field input[type="file"]{
+  width:100%;
+  color:var(--text-lo);
+  font-family:var(--sans);
+  font-size:16px;
+  padding:8px 0;
+}
+
+input::file-selector-button{
+  font-family:var(--sans);
+  font-weight:500;
+  font-size:0.85rem;
+  color:var(--text-hi);
+  padding:0.6em 1em;
+  margin-right:12px;
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  background:var(--ink-3);
+  cursor:pointer;
+  transition:border-color .15s ease, color .15s ease;
+}
+
+input::file-selector-button:hover{
+  border-color:var(--ember);
+  color:var(--ember-hi);
+}
+
+.actions{
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:10px;
+}
+
+.btn{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  flex:1 1 140px;
+  font-family:var(--sans);
+  font-weight:600;
+  font-size:0.9rem;
+  padding:0.85em 1em;
+  border-radius:var(--radius);
+  cursor:pointer;
+  border:1px solid var(--ember);
+  touch-action:manipulation;
+  -webkit-tap-highlight-color:transparent;
+  transition:background .15s ease, color .15s ease, border-color .15s ease, opacity .15s ease;
+}
+
+.btn:disabled{
+  opacity:0.5;
+  cursor:not-allowed;
+}
+
+.btn-primary{
+  background:var(--ember);
+  color:var(--text-hi);
+}
+
+.btn-primary:hover{
+  background:var(--ember-hi);
+  border-color:var(--ember-hi);
+}
+
+.btn-secondary{
+  background:transparent;
+  color:var(--ember-hi);
+}
+
+.btn-secondary:hover{
+  background:var(--ink-3);
+  color:var(--text-hi);
+}
+
+#play,
+#pause{
+  width:44px;
+  height:44px;
+  flex:0 0 auto;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:var(--text-lo);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  cursor:pointer;
+  touch-action:manipulation;
+  -webkit-tap-highlight-color:transparent;
+  transition:color .15s ease, border-color .15s ease;
+}
+
+#play:hover{
+  color:var(--ember-hi);
+  border-color:var(--ember);
+}
+
+@media (min-width: 640px){
+  .actions{
+    flex-wrap:nowrap;
   }
+}
 
+@media (min-width: 900px){
+  .stage{
+    padding:32px 20px 40px;
+    gap:20px;
+  }
+  .tex{
+    min-height:420px;
+  }
+}
 
+/* SweetAlert2 theming to match Ferdinand */
+.swal2-popup.fer-popup{
+  font-family:var(--sans);
+  background:var(--ink-2);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  color:var(--text-hi);
+}
+.swal2-popup.fer-popup .swal2-title{
+  font-family:var(--serif);
+  color:var(--text-hi);
+  font-size:1.3rem;
+}
+.swal2-popup.fer-popup .swal2-html-container{
+  color:var(--text-lo);
+}
+.swal2-popup.fer-popup .swal2-input,
+.swal2-popup.fer-popup .swal2-textarea{
+  background:var(--ink-3);
+  border:1px solid var(--line);
+  color:var(--text-hi);
+  border-radius:var(--radius);
+  font-family:var(--sans);
+  box-shadow:none;
+}
+.swal2-popup.fer-popup .swal2-input:focus,
+.swal2-popup.fer-popup .swal2-textarea:focus{
+  border-color:var(--ember);
+  box-shadow:0 0 0 1px var(--ember);
+}
+.swal2-popup.fer-popup .swal2-validation-message{
+  background:var(--ink-3);
+  color:var(--ember-hi);
+}
+.swal2-popup.fer-popup .swal2-close{
+  color:var(--text-lo);
+}
+.fer-progress{
+  width:100%;
+  height:6px;
+  background:var(--ink-3);
+  border-radius:3px;
+  overflow:hidden;
+  margin-top:6px;
+}
+.fer-progress-bar{
+  height:100%;
+  width:0%;
+  background:var(--ember);
+  border-radius:3px;
+  transition:width .18s ease;
+}
+.swal2-popup.fer-popup .swal2-icon.swal2-question{
+  border-color:var(--ember);
+}
+.swal2-popup.fer-popup .swal2-icon .swal2-icon-content i{
+  font-size:2rem;
+}
+.fer-load-mark{
+  width:64px;
+  height:64px;
+  object-fit:contain;
+  margin:0 auto 14px;
+  display:block;
+}
 
+.fer-audio-mark{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  width:100%;
+  height:100%;
+  min-height:120px;
+  font-size:3rem;
+  color:var(--ember);
+}
+
+/* theme toggle */
+.toolbar .theme-toggle{
+  position:relative;
+}
+
+/* small screens: avoid iOS Safari zooming controls */
+@media (max-width:600px){
+  .btn{
+    font-size:1rem;
+  }
+}
+
+/* footer credit */
+.foo{
+  flex:0 0 auto;
+  text-align:center;
+  padding:4px 20px 14px;
+  font-family:var(--sans);
+  font-size:0.72rem;
+  letter-spacing:0.03em;
+  color:var(--text-lo);
+}
+
+.foo strong{
+  color:var(--ember-hi);
+  font-weight:600;
+}
 </style>
-
 </head>
-
 
 <body>
 
-<img src="venom-load.gif" class="loa" id="lo">
 <div id="hhh" class="hea">
-<a href="https://youtu.be/pihJVwap7iI?si=ixIjT8pjO41Z8f2v"><img src="https://raw.githubusercontent.com/microintel/endgram/main/photo/ferdinand-logo.png"></a>
-<div>
-
-<i onclick="impo()" class="fa-solid fa-link"></i>
-<i onclick="shr('ts')" class="fa-solid fa-share"></i>
-
-<i onclick="shr('fs')" class="fa-solid fa-share-from-square"></i>
-<i onclick="pri()" class="fa-solid fa-file-arrow-down"></i> 
-
-</div>
-</div>
-
-<div id="ttex" class="tex">
-<p contenteditable="true" id="pyy"> Content Will Appear Here!   </p>
+  <a class="brand" href="https://youtu.be/pihJVwap7iI?si=ixIjT8pjO41Z8f2v">
+    <img class="brand-mark" src="https://raw.githubusercontent.com/microintel/endgram/main/photo/ferdinand-logo.png" alt="Ferdinand">
+  </a>
+  <div class="toolbar">
+    <i onclick="location.reload()" class="bi bi-plus-lg" title="New input"></i>
+    <i id="themeToggle" onclick="toggleTheme()" class="bi bi-moon-stars-fill" title="Switch to light theme"></i>
+    <i onclick="impo()" class="bi bi-link-45deg" title="Import from link"></i>
+    <i onclick="shr('ts')" class="bi bi-share" title="Share text"></i>
+    <i onclick="shr('fs')" class="bi bi-file-earmark-arrow-up" title="Share file"></i>
+    <i onclick="pri()" class="bi bi-download" title="Download"></i>
+  </div>
 </div>
 
-<div id="inpp" class="inps">
-<input id="ii" type="file"> 
-<div>
-<button onclick="ennx('e')"> Conceal <i class="fa-solid fa-eye-slash"></i> </button>
-<button onclick="ennx('d')"> Reveal <i class="fa-solid fa-eye"></i>  </button>
-<i id="play" onclick="spea(this)" style="font-size:1.8rem;color:white;" class="fa-solid fa-play"></i>
-<i id="xxxf" onclick="vvpl(this)" style="font-size:1rem;color:transparent;" class="fa-solid fa-heart"></i>
-</div>
-</div>
+<main class="stage">
+
+  <div id="ttex" class="tex">
+    <div class="doc-strip">
+      <span class="doc-title">Secure Note</span>
+      <span class="doc-hint"><i class="bi bi-shield-lock-fill"></i> AES-256</span>
+    </div>
+    <p contenteditable="true" id="pyy"></p>
+  </div>
+
+  <div id="inpp" class="inps">
+    <div class="file-field">
+      <input id="ii" type="file" accept=".txt,text/*,image/*,audio/*,video/*">
+    </div>
+    <div class="actions">
+      <button class="btn btn-primary" onclick="ennx('e')"><i class="bi bi-lock-fill"></i> Conceal</button>
+      <button class="btn btn-secondary" onclick="ennx('d')"><i class="bi bi-unlock-fill"></i> Reveal</button>
+      <i id="play" onclick="spea(this)" class="bi bi-play-fill" title="Read aloud"></i>
+    </div>
+  </div>
+
+</main>
+
+<div class="foo">Developed by <strong>Microintel</strong></div>
+
 <script>
     const urlP = new URLSearchParams(window.location.search);
     const shTt = urlP.get('text');
@@ -190,278 +550,464 @@ z-index:10;
 </script>
 <script type="text/javascript">
 
+const swalTheme = Swal.mixin({
+  customClass:{ popup:'fer-popup' },
+  background:'var(--ink-2)',
+  color:'var(--text-hi)',
+  confirmButtonColor:'#b0442f',
+  cancelButtonColor:'#2c3240',
+  buttonsStyling:true
+});
 
-
-
-function vvpl(xv){
-if(xv.id=="xxxf"){
-let dddt = document.getElementById("pyy").textContent;
-
-if(dddt.startsWith("data:video/")){
-
-let iaee=document.createElement("video");
-iaee.id="videoid";
-iaee.src=dddt;
-iaee.style.width="98%";
-iaee.style.height="auto";
-iaee.style.margin="6px";
-document.getElementById("pyy").contentEditable="false";
-document.getElementById("pyy").textContent="";
-document.getElementById("pyy").appendChild(iaee);
-
-}
-xv.id="mmmf";
-}
-/*
-if(xv.id=="mmmf"){
-
-if(document.getElementById("videoid").paused){
-document.getElementById("videoid").play();
-}
-else{
-document.getElementById("videoid").pause();
+/* theme: dark (default) / light, persisted in localStorage */
+function updateThemeIcon(theme){
+  const btn = document.getElementById('themeToggle');
+  if(!btn) return;
+  btn.className = theme === 'dark' ? 'bi bi-moon-stars-fill' : 'bi bi-sun-fill';
+  btn.title = theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme';
 }
 
+function toggleTheme(){
+  const current = document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
+  const next = current === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  try{ localStorage.setItem('fer-theme', next); }catch(e){}
+  updateThemeIcon(next);
 }
-*/
+
+updateThemeIcon(document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark');
+
+let ferProgTimer = null;
+
+function showProcessing(title){
+  swalTheme.fire({
+    title:title,
+    html:`<img src="venom-load.gif" class="fer-load-mark" alt="">
+          <div class="fer-progress"><div class="fer-progress-bar" id="ferBar"></div></div>`,
+    allowOutsideClick:false,
+    allowEscapeKey:false,
+    showConfirmButton:false,
+    didOpen:()=>{
+      let bar = document.getElementById('ferBar');
+      let w = 0;
+      ferProgTimer = setInterval(()=>{
+        w = Math.min(w + Math.random()*20, 92);
+        if(bar) bar.style.width = w + '%';
+      }, 150);
+    }
+  });
 }
+
+function hideProcessing(){
+  if(ferProgTimer){ clearInterval(ferProgTimer); ferProgTimer = null; }
+  Swal.close();
+}
+
+function toast(icon, title, text){
+  swalTheme.fire({icon:icon, title:title, text:text});
+}
+
+async function askPassword(title){
+  const { value: pw } = await swalTheme.fire({
+    title:title,
+    icon:'question',
+    iconHtml:'<i class="bi bi-shield-lock-fill"></i>',
+    iconColor:'#b0442f',
+    input:'password',
+    inputPlaceholder:'Enter password',
+    inputAttributes:{ autocapitalize:'off', autocorrect:'off' },
+    showCancelButton:true,
+    confirmButtonText:'Continue',
+    inputValidator:(v)=> !v ? 'Password cannot be empty' : undefined
+  });
+  return pw;
+}
+
+function speakingUtterance(){ return window.__ferUtterance; }
 
 function spea(x) {
+  const media = document.getElementById("audioid") || document.getElementById("videoid");
+
+  if (media) {
+    if (x.id === "play") {
+      media.play();
+      x.id = "pause";
+      x.className = "bi bi-pause-fill";
+      media.onended = function () {
+        x.id = "play";
+        x.className = "bi bi-play-fill";
+      };
+    } else {
+      media.pause();
+      x.id = "play";
+      x.className = "bi bi-play-fill";
+    }
+    return;
+  }
 
   if (x.id === "play") {
-  let sv = document.getElementById("pyy").textContent;
-  let spp = new SpeechSynthesisUtterance(sv);
-  spp.lang = "kn-IN";
+    let sv = document.getElementById("pyy").textContent;
+    if(!sv || !sv.trim()){
+      toast('info','Nothing to read','Add some text first.');
+      return;
+    }
+    let spp = new SpeechSynthesisUtterance(sv);
+    window.__ferUtterance = spp;
+    spp.lang = navigator.language || "en-US";
     speechSynthesis.speak(spp);
     x.id = "pause";
-    x.className="fa-solid fa-pause";
+    x.className = "bi bi-pause-fill";
     spp.onend = function () {
-    x.className="fa-solid fa-play";
+      x.id = "play";
+      x.className = "bi bi-play-fill";
     };
-   
   } else {
     if (speechSynthesis.speaking) {
       speechSynthesis.cancel();
     }
     x.id = "play";
-    x.className="fa-solid fa-play";
-    spp.onend = function () {
-    x.className="fa-solid fa-play";
-    };
-   
+    x.className = "bi bi-play-fill";
   }
 }
-let pas="";
-function ennx(x){
-pas=prompt("Enter PassWord :- ");
-document.getElementById("inpp").style.filter="blur(10px)";
-document.getElementById("ttex").style.filter="blur(10px)";
-document.getElementById("hhh").style.filter="blur(10px)";
-document.getElementById("lo").style.display="block";
-if(x=='e'){setTimeout(enn,11000);}
-if(x=='d'){setTimeout(ddd,11000);}
-}
 
+let pas = "";
+let ferPendingBinary = null;   // {buf: ArrayBuffer, mime: string} set when a media file is loaded, awaiting encryption
+let ferObjectUrl = null;       // tracks the current blob: URL so we can revoke it and avoid leaks
 
+/* --- fast, chunked base64 <-> ArrayBuffer helpers ---
+   Chunking avoids call-stack limits and keeps things quick even at 10MB+. */
+const FER_B64_CHUNK = 0x8000;
 
-document.getElementById("ii").addEventListener("change",(e)=>{
-document.getElementById("pyy").contentEditable="true";
-let ff= e.target.files[0];
-
-if(ff.type.includes("text")){
-if(((ff.size/(1024*1024)) < 20)){
-let fi= new FileReader();
-
-
-fi.onload=(e)=>{
-document.getElementById("pyy").textContent=e.target.result;
-}
-fi.readAsText(ff);
-if(fi.readyState==1){document.getElementById("pyy").textContent= "Reading File Contents..."}
-}
-else{
-alert("Please Choose Text File Within \n\n 10MB");
-}
-
-} else if(ff.type.includes("image")){
-
-if (((ff.size/(1024*1024)) < 6)) {
-const ffir = new FileReader();
-  ffir.onload = function (e) {
- const ffid = e.target.result;
- 
- document.getElementById("pyy").textContent=ffid;
-  ennx("e");
-    };
-  ffir.readAsDataURL(ff);
-  document.getElementById("pyy").textContent="Reading Image File...";
+function ferBufToB64(buf){
+  const bytes = new Uint8Array(buf);
+  let binary = "";
+  for(let i=0; i<bytes.length; i+=FER_B64_CHUNK){
+    binary += String.fromCharCode.apply(null, bytes.subarray(i, i + FER_B64_CHUNK));
   }
-  else{
-  alert("Please Choose Image File Size Within \n\n6MB");
-  }
-
-}else if(ff.type.includes("audio") ){
-
-if (((ff.size/(1024*1024)) < 2)) {
-const ffar = new FileReader();
-  ffar.onload = function (e) {
- const ffad = e.target.result;
- document.getElementById("pyy").textContent=ffad;
- document.getElementById("pyy").contentEditable="false";
-  ennx("e");
-    };
-  ffar.readAsDataURL(ff);
-  document.getElementById("pyy").textContent="Reading Audio File...";
-  
-  }else{
-  alert("Please Choose Audio File Size Within \n\n 2MB");
-  }
-
-}
-else if(ff.type.includes("video") ){
-
-if (((ff.size/(1024*1024)) < 20)) {
-const ffarv = new FileReader();
-  ffarv.onload = function (e) {
-  let ffadv = e.target.result;
- document.getElementById("pyy").textContent=ffadv;
-// document.getElementById("pyy").contentEditable="false";
-  
-    };
-  ffarv.readAsDataURL(ff);
-  document.getElementById("pyy").textContent="Reading Video File...";
-  
-  }else{
-  alert("Please Choose Audio File Size Within \n\n 2MB");
-  }
-
-}
-else{
-alert("Ferdinand Is Developed For Text,Image,Audio Files Only..");
+  return btoa(binary);
 }
 
+function ferB64ToBuf(b64){
+  const binary = atob(b64);
+  const bytes = new Uint8Array(binary.length);
+  for(let i=0; i<binary.length; i++){ bytes[i] = binary.charCodeAt(i); }
+  return bytes.buffer;
+}
 
+/* Derive an AES-256-GCM key from the password using PBKDF2 (native, hardware-accelerated). */
+async function ferDeriveKey(password, salt, usage){
+  const keyMaterial = await crypto.subtle.importKey(
+    "raw", new TextEncoder().encode(password), "PBKDF2", false, ["deriveKey"]
+  );
+  return crypto.subtle.deriveKey(
+    { name:"PBKDF2", salt:salt, iterations:150000, hash:"SHA-256" },
+    keyMaterial,
+    { name:"AES-GCM", length:256 },
+    false,
+    [usage]
+  );
+}
+
+/* Core: encrypts a raw ArrayBuffer directly. No pre-inflation, no double base64 —
+   the ciphertext is base64'd exactly once, for storage as text. */
+async function ferEncryptBuf(plainBuf, password, extra){
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const key = await ferDeriveKey(password, salt, "encrypt");
+  const ct = await crypto.subtle.encrypt({ name:"AES-GCM", iv:iv }, key, plainBuf);
+  return JSON.stringify(Object.assign({
+    v:2,
+    s: ferBufToB64(salt.buffer),
+    iv: ferBufToB64(iv.buffer),
+    ct: ferBufToB64(ct)
+  }, extra || {}));
+}
+
+async function ferDecryptBuf(payloadStr, password){
+  const payload = JSON.parse(payloadStr);
+  const salt = new Uint8Array(ferB64ToBuf(payload.s));
+  const iv = new Uint8Array(ferB64ToBuf(payload.iv));
+  const ct = ferB64ToBuf(payload.ct);
+  const key = await ferDeriveKey(password, salt, "decrypt");
+  const plainBuf = await crypto.subtle.decrypt({ name:"AES-GCM", iv:iv }, key, ct);
+  return { buf: plainBuf, t: payload.t, mime: payload.mime };
+}
+
+/* Text convenience wrappers (used for plain text content) */
+async function ferEncrypt(plaintext, password){
+  return ferEncryptBuf(new TextEncoder().encode(plaintext), password, { t:'txt' });
+}
+
+async function ferDecrypt(payloadStr, password){
+  const { buf, t } = await ferDecryptBuf(payloadStr, password);
+  if(t && t !== 'txt') throw new Error('not text');
+  return new TextDecoder().decode(buf);
+}
+
+/* Binary convenience wrapper (used for image/audio/video files — encrypts the
+   raw file bytes directly, skipping the data: URL / base64 pre-inflation step) */
+async function ferEncryptBinary(arrayBuffer, mime, password){
+  return ferEncryptBuf(arrayBuffer, password, { t:'bin', mime:mime });
+}
+
+async function ennx(x){
+  const title = x === 'e' ? 'Enter a password to conceal' : 'Enter the password to reveal';
+  const pw = await askPassword(title);
+  if(!pw){ return; }
+  pas = pw;
+
+  document.getElementById("inpp").querySelectorAll('.btn').forEach(b=>b.disabled=true);
+  showProcessing(x === 'e' ? 'Concealing…' : 'Revealing…');
+
+  /* brief yield so the modal paints before the (now fast, async, non-blocking) crypto work runs */
+  await new Promise(r=>setTimeout(r, 50));
+
+  try{
+    if(x === 'e'){ await enn(); } else { await ddd(); }
+  } finally {
+    document.getElementById("inpp").querySelectorAll('.btn').forEach(b=>b.disabled=false);
+  }
+}
+
+document.getElementById("ii").addEventListener("change", (e)=>{
+  document.getElementById("pyy").contentEditable = "true";
+  let ff = e.target.files[0];
+  if(!ff) return;
+
+  if (speechSynthesis.speaking) { speechSynthesis.cancel(); }
+  const prevMedia = document.getElementById("audioid") || document.getElementById("videoid");
+  if (prevMedia) { prevMedia.pause(); }
+  const playBtn = document.getElementById("play") || document.getElementById("pause");
+  if (playBtn) { playBtn.id = "play"; playBtn.className = "bi bi-play-fill"; }
+  if(ferObjectUrl){ URL.revokeObjectURL(ferObjectUrl); ferObjectUrl = null; }
+
+  if(ff.type.includes("text")){
+    if((ff.size/(1024*1024)) < 10){
+      let fi = new FileReader();
+      fi.onload = (e)=>{
+        document.getElementById("pyy").textContent = e.target.result;
+      };
+      fi.readAsText(ff);
+      document.getElementById("pyy").textContent = "Reading file contents…";
+    } else {
+      toast('warning','File too large','Please choose a text file within 10MB.');
+    }
+
+  } else if(ff.type.includes("image")){
+    if((ff.size/(1024*1024)) < 10){
+      const ffir = new FileReader();
+      ffir.onload = function (e) {
+        ferPendingBinary = { buf: e.target.result, mime: ff.type };
+        document.getElementById("pyy").textContent = "";
+        ennx("e");
+      };
+      ffir.readAsArrayBuffer(ff);
+      document.getElementById("pyy").textContent = "Reading image file…";
+    } else {
+      toast('warning','File too large','Please choose an image file within 10MB.');
+    }
+
+  } else if(ff.type.includes("audio")){
+    if((ff.size/(1024*1024)) < 10){
+      const ffar = new FileReader();
+      ffar.onload = function (e) {
+        ferPendingBinary = { buf: e.target.result, mime: ff.type };
+        document.getElementById("pyy").textContent = "";
+        document.getElementById("pyy").contentEditable = "false";
+        ennx("e");
+      };
+      ffar.readAsArrayBuffer(ff);
+      document.getElementById("pyy").textContent = "Reading audio file…";
+    } else {
+      toast('warning','File too large','Please choose an audio file within 10MB.');
+    }
+
+  } else if(ff.type.includes("video")){
+    if((ff.size/(1024*1024)) < 10){
+      const ffarv = new FileReader();
+      ffarv.onload = function (e) {
+        ferPendingBinary = { buf: e.target.result, mime: ff.type };
+        document.getElementById("pyy").textContent = "";
+        document.getElementById("pyy").contentEditable = "false";
+        ennx("e");
+      };
+      ffarv.readAsArrayBuffer(ff);
+      document.getElementById("pyy").textContent = "Reading video file…";
+    } else {
+      toast('warning','File too large','Please choose a video file within 10MB.');
+    }
+
+  } else {
+    toast('warning','Unsupported file type','Ferdinand supports text, image, audio and video files only.');
+  }
+
+  e.target.value = "";
 });
 
-
-function enn(){
-document.getElementById("inpp").style.filter="blur(0px)";
-document.getElementById("ttex").style.filter="blur(0px)";
-document.getElementById("hhh").style.filter="blur(0px)";
-document.getElementById("lo").style.display="none";
-let ddt=document.getElementById("pyy").textContent;
-
-document.getElementById("pyy").textContent= CryptoJS.AES.encrypt(ddt,pas).toString();
-
+async function enn(){
+  let encoded;
+  try{
+    if(ferPendingBinary){
+      encoded = await ferEncryptBinary(ferPendingBinary.buf, ferPendingBinary.mime, pas);
+    } else {
+      let ddt = document.getElementById("pyy").textContent;
+      encoded = await ferEncrypt(ddt, pas);
+    }
+  }catch(err){
+    hideProcessing();
+    pas = "";
+    ferPendingBinary = null;
+    toast('error','Concealing failed','Something went wrong while concealing this content.');
+    return;
+  }
+  hideProcessing();
+  document.getElementById("pyy").textContent = encoded;
+  pas = "";
+  ferPendingBinary = null;
 }
 
-function ddd(){
-let ddt=document.getElementById("pyy").textContent;
-document.getElementById("inpp").style.filter="blur(0px)";
-document.getElementById("ttex").style.filter="blur(0px)";
-document.getElementById("hhh").style.filter="blur(0px)";
-document.getElementById("lo").style.display="none";
-let en= CryptoJS.AES.decrypt(ddt,pas);
-document.getElementById("pyy").textContent=en.toString(CryptoJS.enc.Utf8);
-let pyyte=document.getElementById("pyy").textContent;
-if(pyyte.startsWith("data:image/")){
-    
-let ie=document.createElement("img");
-ie.src=pyyte;
-ie.style.width="98%";
-ie.style.height="auto";
-ie.style.margin="6px";
+async function ddd(){
+  let ddt = document.getElementById("pyy").textContent;
+  let result;
+  try{
+    result = await ferDecryptBuf(ddt, pas);
+    if(!result || !result.buf) throw new Error('empty');
+  }catch(err){
+    hideProcessing();
+    pas = "";
+    toast('error','Incorrect password','This content could not be revealed.');
+    return;
+  }
 
-document.getElementById("pyy").textContent="";
-document.getElementById("pyy").appendChild(ie);
+  hideProcessing();
+  pas = "";
+
+  if (speechSynthesis.speaking) { speechSynthesis.cancel(); }
+  const prevMedia = document.getElementById("audioid") || document.getElementById("videoid");
+  if (prevMedia) { prevMedia.pause(); }
+  const playBtn = document.getElementById("play") || document.getElementById("pause");
+  if (playBtn) { playBtn.id = "play"; playBtn.className = "bi bi-play-fill"; }
+
+  /* release any previous blob: URL before creating a new one */
+  if(ferObjectUrl){ URL.revokeObjectURL(ferObjectUrl); ferObjectUrl = null; }
+
+  document.getElementById("pyy").textContent = "";
+  document.getElementById("pyy").contentEditable = "true";
+
+  if(result.t === 'bin' && result.mime){
+    const blob = new Blob([result.buf], { type: result.mime });
+    ferObjectUrl = URL.createObjectURL(blob);
+
+    if(result.mime.startsWith("image/")){
+      let ie = document.createElement("img");
+      ie.src = ferObjectUrl;
+      document.getElementById("pyy").appendChild(ie);
+      document.getElementById("pyy").contentEditable = "false";
+
+    } else if(result.mime.startsWith("audio/")){
+      let amark = document.createElement("div");
+      amark.className = "fer-audio-mark";
+      amark.innerHTML = '<i class="bi bi-music-note-beamed"></i>';
+      document.getElementById("pyy").appendChild(amark);
+
+      let iae = document.createElement("audio");
+      iae.id = "audioid";
+      iae.src = ferObjectUrl;
+      iae.controls = false;
+      document.getElementById("pyy").appendChild(iae);
+      document.getElementById("pyy").contentEditable = "false";
+
+    } else if(result.mime.startsWith("video/")){
+      let ive = document.createElement("video");
+      ive.id = "videoid";
+      ive.src = ferObjectUrl;
+      ive.controls = false;
+      document.getElementById("pyy").appendChild(ive);
+      document.getElementById("pyy").contentEditable = "false";
+    }
+
+  } else {
+    document.getElementById("pyy").textContent = new TextDecoder().decode(result.buf);
+  }
 }
 
-if(pyyte.startsWith("data:audio/")){
+async function pri(){
+  let con = document.getElementById("pyy").textContent;
+  if(!con || !con.trim()){
+    toast('info','Nothing to download','Add some content first.');
+    return;
+  }
+  const { value: fina } = await swalTheme.fire({
+    title:'Download file',
+    icon:'question',
+    iconHtml:'<i class="bi bi-download"></i>',
+    iconColor:'#b0442f',
+    input:'text',
+    inputValue:'ferdinand.txt',
+    showCancelButton:true,
+    confirmButtonText:'Download',
+    inputValidator:(v)=> !v ? 'Please enter a file name' : undefined
+  });
+  if(!fina) return;
 
-let iae=document.createElement("audio");
-iae.id="audioid";
-iae.src=pyyte;
-
-
-document.getElementById("pyy").contentEditable="false";
-document.getElementById("pyy").textContent="  Click here To Play / Pause...";
-document.getElementById("pyy").appendChild(iae);
-
-}
-}
-
-function pri(){
-
-let con = document.getElementById("pyy").textContent;
-let fina= prompt("Enter File Name or Click Cancel : ") || "ferdinand.txt" ;
-
-let bb= new Blob([con],{type:"text/plain"});
-
-let xx= document.createElement("a");
-
-xx.href=URL.createObjectURL(bb);
-xx.download=fina;
-xx.click();
+  let bb = new Blob([con], {type:"text/plain"});
+  let xx = document.createElement("a");
+  xx.href = URL.createObjectURL(bb);
+  xx.download = fina;
+  xx.click();
+  URL.revokeObjectURL(xx.href);
 }
 
 async function shr(x) {
   let con = document.getElementById("pyy").textContent;
-  if(x=='fs'){
-  let bb = new Blob([con], { type: "text/plain" });
-  let file = new File([bb], "ferdinand.txt", { type: "text/plain" });
-
-      navigator.share({
-        files: [file]
-          });
-       }
-  else{
-  navigator.share({text:con});
-  
+  if(!con || !con.trim()){
+    toast('info','Nothing to share','Add some content first.');
+    return;
   }
-          
+  if(!navigator.share){
+    toast('info','Sharing unavailable','Your browser does not support the Share feature.');
+    return;
+  }
+  try{
+    if(x === 'fs'){
+      let bb = new Blob([con], { type:"text/plain" });
+      let file = new File([bb], "ferdinand.txt", { type:"text/plain" });
+      await navigator.share({ files:[file] });
+    } else {
+      await navigator.share({ text:con });
+    }
+  }catch(err){
+    /* user cancelled the share sheet — nothing to do */
+  }
 }
-
-
 
 async function impo(){
+  const { value: userU } = await swalTheme.fire({
+    title:'Import from link',
+    icon:'question',
+    iconHtml:'<i class="bi bi-link-45deg"></i>',
+    iconColor:'#b0442f',
+    input:'url',
+    inputPlaceholder:'https://example.com/file.txt',
+    showCancelButton:true,
+    confirmButtonText:'Import',
+    inputValidator:(v)=> !v ? 'Please enter a URL' : undefined
+  });
+  if(!userU) return;
 
-let userU= await prompt("Enter or Paste Text File Link Here! : ");
-
-let fet= await fetch(userU);
-let fetCon= await fet.text();
-document.getElementById("pyy").textContent=fetCon;
-
+  showProcessing('Importing…');
+  try{
+    let fet = await fetch(userU);
+    if(!fet.ok) throw new Error('Request failed');
+    let fetCon = await fet.text();
+    hideProcessing();
+    document.getElementById("pyy").textContent = fetCon;
+    document.getElementById("pyy").contentEditable = "true";
+  }catch(err){
+    hideProcessing();
+    toast('error','Import failed','Could not fetch content from that link.');
+  }
 }
-
-
-
-
-document.getElementById("pyy").addEventListener("click",()=>{
-if(document.getElementById("audioid").paused){
-document.getElementById("audioid").play();
-}
-else{
-document.getElementById("audioid").pause();
-}
-});
-
-
-
-
-
-document.getElementById("pyy").addEventListener("click",()=>{
-
-
-if(document.getElementById("videoid").paused){
-document.getElementById("videoid").play();
-}
-else{
-document.getElementById("videoid").pause();
-}
-});
-
-
-
 
 </script>
 
@@ -469,3 +1015,6 @@ document.getElementById("videoid").pause();
 
 
 </html>
+
+
+
