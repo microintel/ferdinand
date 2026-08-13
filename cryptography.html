@@ -1,0 +1,598 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Ferdinand — How the concealment works</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,600;8..60,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#14181f;
+  --ink-2:#1b2029;
+  --ink-3:#232935;
+  --line:#2c3240;
+  --paper:#f6f4ee;
+  --paper-strip:#efebe0;
+  --paper-line:#dcd6c6;
+  --paper-hint:#9a9382;
+  --text-hi:#f1efe8;
+  --text-lo:#8a92a3;
+  --text-doc:#1d1c18;
+  --text-doc-lo:#6b6455;
+  --text-doc-hi:#2b2a25;
+  --ember:#b0442f;
+  --ember-hi:#c85640;
+  --cipher:#3f7d78;
+  --cipher-hi:#579b95;
+  --radius:4px;
+  --sans:'Inter',system-ui,-apple-system,sans-serif;
+  --serif:'Source Serif 4',Georgia,serif;
+  --mono:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+  color-scheme:dark;
+}
+
+*{box-sizing:border-box;}
+
+html{scroll-behavior:smooth;}
+
+body{
+  margin:0;
+  background:var(--ink);
+  color:var(--text-hi);
+  font-family:var(--sans);
+  line-height:1.6;
+}
+
+a{color:var(--ember-hi);}
+
+/* ambient texture: faint grid, like graph paper under lamplight */
+body::before{
+  content:"";
+  position:fixed;
+  inset:0;
+  background-image:
+    linear-gradient(var(--line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--line) 1px, transparent 1px);
+  background-size:64px 64px;
+  opacity:.06;
+  pointer-events:none;
+  z-index:0;
+}
+
+.wrap{position:relative; z-index:1;}
+
+/* header */
+.hea{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:16px 24px;
+  border-bottom:1px solid var(--line);
+  background:var(--ink-2);
+  flex-wrap:wrap;
+  gap:10px;
+  position:sticky;
+  top:0;
+  z-index:5;
+  backdrop-filter:blur(6px);
+}
+
+.brand{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  color:var(--text-hi);
+  min-width:0;
+}
+
+.brand i{color:var(--ember);font-size:1.1rem;}
+
+.brand-name{
+  font-family:var(--serif);
+  font-weight:600;
+  font-size:1.05rem;
+  letter-spacing:.01em;
+}
+
+.brand-sub{
+  font-family:var(--mono);
+  font-size:.68rem;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  color:var(--text-lo);
+  padding-left:10px;
+  border-left:1px solid var(--line);
+}
+
+nav.jump{display:flex; gap:2px; flex-wrap:wrap;}
+nav.jump a{
+  font-family:var(--mono);
+  font-size:.72rem;
+  letter-spacing:.04em;
+  text-decoration:none;
+  color:var(--text-lo);
+  padding:6px 10px;
+  border-radius:var(--radius);
+  transition:color .15s ease, background .15s ease;
+}
+nav.jump a:hover{color:var(--ember-hi); background:var(--ink-3);}
+
+/* hero */
+.hero{
+  max-width:760px;
+  margin:0 auto;
+  padding:72px 24px 48px;
+}
+
+.hero .eyebrow{
+  font-family:var(--mono);
+  font-size:.72rem;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  color:var(--cipher-hi);
+  margin-bottom:18px;
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+.hero .eyebrow::before{content:"";width:22px;height:1px;background:var(--cipher-hi);}
+
+.hero h1{
+  font-family:var(--serif);
+  font-weight:600;
+  font-size:clamp(2rem, 5vw, 3rem);
+  line-height:1.15;
+  margin:0 0 20px;
+  color:var(--text-hi);
+}
+.hero h1 em{
+  font-style:normal;
+  color:var(--ember-hi);
+}
+
+.hero p.lede{
+  font-size:1.05rem;
+  color:var(--text-lo);
+  max-width:58ch;
+  margin:0;
+}
+
+/* the cipher strip — signature element: plaintext visibly folding into ciphertext */
+.strip{
+  max-width:760px;
+  margin:0 auto 64px;
+  padding:0 24px;
+}
+.strip-card{
+  background:var(--paper);
+  border:1px solid var(--paper-line);
+  border-radius:var(--radius);
+  box-shadow:0 1px 0 rgba(0,0,0,.4), 0 20px 40px -24px rgba(0,0,0,.6);
+  overflow:hidden;
+}
+.strip-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:9px 16px;
+  background:var(--paper-strip);
+  border-bottom:1px solid var(--paper-line);
+  font-family:var(--mono);
+  font-size:.68rem;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  color:var(--text-doc-lo);
+}
+.strip-head .live{color:var(--ember); font-weight:600; display:flex; align-items:center; gap:6px;}
+.strip-body{
+  padding:20px;
+  font-family:var(--mono);
+  font-size:.85rem;
+  color:var(--text-doc);
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+.strip-row{display:flex; align-items:baseline; gap:14px; flex-wrap:wrap;}
+.strip-row .lbl{
+  flex:0 0 96px;
+  font-size:.68rem;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+  color:var(--text-doc-lo);
+}
+.strip-row .val{
+  word-break:break-all;
+  color:var(--text-doc);
+}
+.strip-row .val.cipher-out{color:var(--ember); font-weight:500;}
+.strip-note{
+  margin-top:6px;
+  padding-top:14px;
+  border-top:1px dashed var(--paper-line);
+  font-family:var(--sans);
+  font-size:.85rem;
+  color:var(--text-doc-lo);
+}
+.strip input[type="text"]{
+  width:100%;
+  border:1px solid var(--paper-line);
+  border-radius:var(--radius);
+  background:#fff;
+  color:var(--text-doc);
+  font-family:var(--mono);
+  font-size:.85rem;
+  padding:8px 10px;
+}
+.strip input[type="text"]:focus{outline:2px solid var(--cipher); outline-offset:1px;}
+
+/* sections */
+section.block{
+  max-width:760px;
+  margin:0 auto;
+  padding:8px 24px 56px;
+  scroll-margin-top:80px;
+}
+
+.block-head{
+  display:flex;
+  align-items:baseline;
+  gap:12px;
+  margin-bottom:22px;
+  border-bottom:1px solid var(--line);
+  padding-bottom:14px;
+}
+.block-head .tag{
+  font-family:var(--mono);
+  font-size:.72rem;
+  color:var(--paper-hint);
+  letter-spacing:.06em;
+}
+.block-head h2{
+  font-family:var(--serif);
+  font-weight:600;
+  font-size:1.5rem;
+  margin:0;
+  color:var(--text-hi);
+}
+
+.grid-concepts{
+  display:grid;
+  grid-template-columns:repeat(auto-fit, minmax(220px,1fr));
+  gap:14px;
+}
+
+.card{
+  background:var(--ink-2);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:18px;
+}
+.card i{color:var(--cipher-hi); font-size:1.1rem; margin-bottom:10px; display:block;}
+.card h3{
+  font-family:var(--sans);
+  font-weight:600;
+  font-size:.95rem;
+  margin:0 0 8px;
+  color:var(--text-hi);
+}
+.card p{
+  margin:0;
+  font-size:.88rem;
+  color:var(--text-lo);
+}
+
+p.body-text{color:var(--text-lo); font-size:.98rem; max-width:64ch;}
+p.body-text strong{color:var(--text-hi); font-weight:600;}
+code.inline{
+  font-family:var(--mono);
+  font-size:.85em;
+  background:var(--ink-3);
+  border:1px solid var(--line);
+  border-radius:3px;
+  padding:1px 6px;
+  color:var(--cipher-hi);
+}
+
+/* the field spec table — real parameters used by this project */
+.spec{
+  width:100%;
+  border-collapse:collapse;
+  font-family:var(--mono);
+  font-size:.82rem;
+  margin-top:6px;
+}
+.spec tr{border-bottom:1px solid var(--line);}
+.spec tr:last-child{border-bottom:none;}
+.spec td{padding:10px 6px; vertical-align:top;}
+.spec td:first-child{color:var(--paper-hint); width:34%; white-space:nowrap;}
+.spec td:last-child{color:var(--text-lo);}
+.spec td:last-child b{color:var(--text-hi); font-weight:600;}
+
+/* step by step usage guide — this IS a real sequence, so numbering earns its place */
+.steps{list-style:none; margin:0; padding:0; counter-reset:step;}
+.step{
+  counter-increment:step;
+  display:flex;
+  gap:18px;
+  padding:20px 0;
+  border-bottom:1px solid var(--line);
+}
+.step:last-child{border-bottom:none;}
+.step::before{
+  content:counter(step,decimal-leading-zero);
+  font-family:var(--mono);
+  font-size:.95rem;
+  color:var(--ember-hi);
+  flex:0 0 auto;
+  padding-top:2px;
+}
+.step h3{
+  font-family:var(--sans);
+  font-weight:600;
+  font-size:1rem;
+  margin:0 0 6px;
+  color:var(--text-hi);
+}
+.step p{margin:0; color:var(--text-lo); font-size:.92rem;}
+.step .icon{color:var(--cipher-hi); margin-right:6px;}
+
+/* warning / integrity note */
+.notebox{
+  display:flex;
+  gap:12px;
+  background:var(--ink-2);
+  border:1px solid var(--line);
+  border-left:3px solid var(--cipher);
+  border-radius:var(--radius);
+  padding:16px 18px;
+  margin-top:20px;
+}
+.notebox i{color:var(--cipher-hi); font-size:1rem; padding-top:2px;}
+.notebox p{margin:0; font-size:.88rem; color:var(--text-lo);}
+.notebox b{color:var(--text-hi);}
+
+footer{
+  max-width:760px;
+  margin:0 auto;
+  padding:32px 24px 64px;
+  font-family:var(--mono);
+  font-size:.72rem;
+  color:var(--paper-hint);
+  letter-spacing:.03em;
+}
+
+@media (max-width:600px){
+  .hea{padding:12px 16px;}
+  nav.jump{display:none;}
+  .hero{padding:48px 16px 32px;}
+  .strip, section.block, footer{padding-left:16px; padding-right:16px;}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="hea">
+  <div class="brand">
+    <i class="bi bi-shield-lock-fill"></i>
+    <span class="brand-name">Ferdinand</span>
+    <span class="brand-sub">field notes</span>
+  </div>
+  <nav class="jump">
+    <a href="#basics">Basics</a>
+    <a href="#pipeline">Pipeline</a>
+    <a href="#media">Media</a>
+    <a href="#spec">Spec</a>
+    <a href="#guide">Guide</a>
+  </nav>
+</header>
+
+<section class="hero">
+  <div class="eyebrow"><i class="bi bi-terminal"></i> How the concealment works</div>
+  <h1>Cryptography, and what <em>Ferdinand</em> actually does with your password.</h1>
+  <p class="lede">This page explains the ideas behind encryption in plain terms, then walks through the exact steps Ferdinand takes when you conceal or reveal something — and how to use the tool itself.</p>
+</section>
+
+<div class="strip">
+  <p style="max-width:760px;margin:0 auto 14px;padding:0 24px;font-family:var(--mono);font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--text-lo);">This is a simulator for cryptography — it runs the real algorithm live in your browser as you type.</p>
+  <div class="strip-card">
+    <div class="strip-head">
+      <span>simulator for cryptography — try it below</span>
+      <span class="live"><i class="bi bi-record-circle-fill"></i> live</span>
+    </div>
+    <div class="strip-body">
+      <div class="strip-row">
+        <span class="lbl">plaintext</span>
+        <input type="text" id="specIn" value="meet at dawn" maxlength="40">
+      </div>
+      <div class="strip-row"><span class="lbl">salt (16B)</span><span class="val" id="specSalt">—</span></div>
+      <div class="strip-row"><span class="lbl">iv (12B)</span><span class="val" id="specIv">—</span></div>
+      <div class="strip-row"><span class="lbl">ciphertext</span><span class="val cipher-out" id="specOut">—</span></div>
+      <div class="strip-note">Every character you type reshuffles the salt and IV, so the ciphertext below never repeats — even for the exact same word. That's the point: identical secrets should never look identical once concealed.</div>
+    </div>
+  </div>
+</div>
+
+<section class="block" id="basics">
+  <div class="block-head"><span class="tag">01</span><h2>The basic idea</h2></div>
+  <p class="body-text">Cryptography turns readable content (<strong>plaintext</strong>) into content that looks like noise (<strong>ciphertext</strong>), in a way that's only reversible if you hold the right secret. Ferdinand uses <strong>symmetric encryption</strong>: the same password both conceals and reveals the content. There's no separate "public" and "private" key pair here — just one password, held by whoever should be able to read the message.</p>
+  <div class="grid-concepts" style="margin-top:22px;">
+    <div class="card">
+      <i class="bi bi-key-fill"></i>
+      <h3>Key</h3>
+      <p>The actual secret used to scramble data. It's not your password directly — it's derived from it.</p>
+    </div>
+    <div class="card">
+      <i class="bi bi-shuffle"></i>
+      <h3>Salt</h3>
+      <p>Random bytes mixed into your password before deriving a key, so the same password never produces the same key twice.</p>
+    </div>
+    <div class="card">
+      <i class="bi bi-arrow-repeat"></i>
+      <h3>IV / nonce</h3>
+      <p>A random value used once per encryption, so encrypting the same text twice still gives different ciphertext.</p>
+    </div>
+    <div class="card">
+      <i class="bi bi-patch-check-fill"></i>
+      <h3>Auth tag</h3>
+      <p>A built-in checksum that lets decryption detect tampering or a wrong password, instead of silently returning garbage.</p>
+    </div>
+  </div>
+</section>
+
+<section class="block" id="pipeline">
+  <div class="block-head"><span class="tag">02</span><h2>What happens when you conceal something</h2></div>
+  <p class="body-text">Ferdinand runs entirely in your browser — nothing you type or upload is sent anywhere. When you press <em>conceal</em>, four things happen in order:</p>
+  <ol class="steps">
+    <li class="step">
+      <div>
+        <h3><i class="bi bi-1-circle icon"></i>Random salt and IV are generated</h3>
+        <p>The browser's cryptographic random number generator produces a fresh 16-byte salt and 12-byte IV — different every single time, even for the same password and message.</p>
+      </div>
+    </li>
+    <li class="step">
+      <div>
+        <h3><i class="bi bi-2-circle icon"></i>Your password becomes a real key</h3>
+        <p>The password itself is never used to encrypt anything directly. It's stretched into a 256-bit key using PBKDF2, repeated 150,000 times over, so guessing passwords by brute force is deliberately slow.</p>
+      </div>
+    </li>
+    <li class="step">
+      <div>
+        <h3><i class="bi bi-3-circle icon"></i>The content is encrypted with AES-256-GCM</h3>
+        <p>Your text, image, audio, or video bytes are encrypted directly — no intermediate re-encoding — producing ciphertext plus an authentication tag.</p>
+      </div>
+    </li>
+    <li class="step">
+      <div>
+        <h3><i class="bi bi-4-circle icon"></i>Everything needed to reverse it (except the password) is packaged together</h3>
+        <p>The salt, IV, and ciphertext are bundled into one block of text. That block is what you see, copy, download, or share — the password never travels with it.</p>
+      </div>
+    </li>
+  </ol>
+  <div class="notebox">
+    <i class="bi bi-info-circle-fill"></i>
+    <p><b>Reveal runs the same steps backwards.</b> Your password plus the stored salt regenerate the exact same key, and the IV lets Ferdinand decrypt the ciphertext. If the password is wrong, the authentication check fails immediately — Ferdinand tells you it can't be revealed rather than showing corrupted content.</p>
+  </div>
+</section>
+
+<section class="block" id="media">
+  <div class="block-head"><span class="tag">03</span><h2>Text, images, audio, and video — secured the same way</h2></div>
+  <p class="body-text">AES-256-GCM doesn't care what the bytes mean — a paragraph of text and a photograph are both just bytes to it. What changes between media types is <strong>how those bytes are prepared beforehand</strong> and <strong>what gets remembered so Ferdinand can rebuild the file afterward</strong>.</p>
+  <div class="grid-concepts" style="margin-top:22px;">
+    <div class="card">
+      <i class="bi bi-fonts"></i>
+      <h3>Text</h3>
+      <p>Your text is converted to raw UTF-8 bytes, then encrypted directly. A small marker records that the result should come back as text, not a file.</p>
+    </div>
+    <div class="card">
+      <i class="bi bi-image-fill"></i>
+      <h3>Images</h3>
+      <p>The image file is read as raw bytes and encrypted as-is — no base64 step beforehand, which keeps large photos from ballooning in size before encryption.</p>
+    </div>
+    <div class="card">
+      <i class="bi bi-music-note-beamed"></i>
+      <h3>Audio</h3>
+      <p>Handled identically to images: raw file bytes in, ciphertext out. The original MIME type (e.g. audio/mpeg) travels alongside, encrypted with everything else.</p>
+    </div>
+    <div class="card">
+      <i class="bi bi-camera-reels-fill"></i>
+      <h3>Video</h3>
+      <p>Same pipeline again. Only the byte size changes — the cipher, key derivation, and password requirement are identical across every media type.</p>
+    </div>
+  </div>
+  <p class="body-text" style="margin-top:18px;">On reveal, Ferdinand checks the stored type marker: <code class="inline">txt</code> decodes straight back to text, while <code class="inline">bin</code> rebuilds a file from the decrypted bytes and its saved MIME type, then renders it as an image, audio player, or video player inline. Nothing about the security is weaker for media — it's the same key, the same cipher, the same authentication check either way. The only extra ingredient is remembering <em>what kind</em> of bytes they were.</p>
+  <div class="notebox">
+    <i class="bi bi-eye-slash-fill"></i>
+    <p><b>The MIME type is encrypted too.</b> Until someone enters the correct password, Ferdinand can't tell — and won't reveal — whether a concealed block contains a sentence, a photo, or a song.</p>
+  </div>
+</section>
+
+<section class="block" id="spec">
+  <div class="block-head"><span class="tag">04</span><h2>Under the hood</h2></div>
+  <p class="body-text">For anyone who wants the exact parameters rather than the plain-English version:</p>
+  <table class="spec">
+    <tr><td>Cipher</td><td><b>AES-256-GCM</b> — authenticated encryption, so tampering or a wrong password is detected rather than silently decrypted into garbage.</td></tr>
+    <tr><td>Key derivation</td><td><b>PBKDF2</b>, SHA-256, <b>150,000 iterations</b> — makes brute-forcing the password computationally expensive.</td></tr>
+    <tr><td>Salt</td><td><b>16 random bytes</b>, generated fresh per operation.</td></tr>
+    <tr><td>IV</td><td><b>12 random bytes</b>, generated fresh per operation.</td></tr>
+    <tr><td>Engine</td><td>Native browser <code class="inline">crypto.subtle</code> (Web Crypto API) — hardware-accelerated, nothing sent over the network.</td></tr>
+    <tr><td>Payload format</td><td>A JSON block carrying version, salt, IV, ciphertext, and a type marker for text vs. image/audio/video.</td></tr>
+  </table>
+</section>
+
+<section class="block" id="guide">
+  <div class="block-head"><span class="tag">05</span><h2>Using Ferdinand, step by step</h2></div>
+  <ol class="steps">
+    <li class="step">
+      <div>
+        <h3>Add your content</h3>
+        <p>Type or paste text directly into the document, or use the file picker to load a text, image, audio, or video file (10MB limit per file).</p>
+      </div>
+    </li>
+    <li class="step">
+      <div>
+        <h3>Choose conceal</h3>
+        <p>Press the conceal action and enter a password when prompted. This password is never stored — remember it, because there's no recovery option.</p>
+      </div>
+    </li>
+    <li class="step">
+      <div>
+        <h3>Save or share the result</h3>
+        <p>The document now shows a block of ciphertext. Copy it, download it as a file, or use the share action to send it through another app.</p>
+      </div>
+    </li>
+    <li class="step">
+      <div>
+        <h3>Reveal it later</h3>
+        <p>Paste the concealed block back into Ferdinand, choose reveal, and enter the same password. Text reappears as text; images, audio, and video render inline.</p>
+      </div>
+    </li>
+  </ol>
+  <div class="notebox">
+    <i class="bi bi-exclamation-triangle-fill"></i>
+    <p><b>The password is the only key.</b> Ferdinand keeps no copy of it and no way to reset it. If it's lost, the concealed content is unrecoverable by design — that's what makes it secure.</p>
+  </div>
+</section>
+
+<footer>Ferdinand — client-side concealment, explained. Nothing on this page or in the app leaves your browser.</footer>
+
+</div>
+
+<script>
+/* Signature demo: live, illustrative re-derivation of salt/IV/ciphertext-shape
+   as the user types, using the same primitives (Web Crypto, AES-256-GCM,
+   PBKDF2) the app itself uses — purely to make the pipeline visible. */
+function toHex(buf){
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
+async function specRun(text){
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const keyMaterial = await crypto.subtle.importKey(
+    "raw", new TextEncoder().encode("demo-password"), "PBKDF2", false, ["deriveKey"]
+  );
+  const key = await crypto.subtle.deriveKey(
+    { name:"PBKDF2", salt:salt, iterations:150000, hash:"SHA-256" },
+    keyMaterial, { name:"AES-GCM", length:256 }, false, ["encrypt"]
+  );
+  const ct = await crypto.subtle.encrypt({ name:"AES-GCM", iv:iv }, key, new TextEncoder().encode(text || " "));
+  document.getElementById('specSalt').textContent = toHex(salt);
+  document.getElementById('specIv').textContent = toHex(iv);
+  document.getElementById('specOut').textContent = toHex(ct).slice(0, 64) + (toHex(ct).length > 64 ? '…' : '');
+}
+
+const specInput = document.getElementById('specIn');
+let specTimer;
+specInput.addEventListener('input', ()=>{
+  clearTimeout(specTimer);
+  specTimer = setTimeout(()=>specRun(specInput.value), 120);
+});
+specRun(specInput.value);
+</script>
+
+</body>
+</html>
