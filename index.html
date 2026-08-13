@@ -10,6 +10,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
 <script>
   /* Apply saved theme before first paint to avoid a flash of the wrong theme. Default: dark. */
   (function(){
@@ -83,10 +84,10 @@ body{
   height:100%;
   height:100dvh;
   margin:0;
-  background:var(--ink);
+  background:transparent;
   color:var(--text-hi);
   font-family:var(--sans);
-  transition:background .2s ease, color .2s ease;
+  transition:color .2s ease;
 }
 
 body{
@@ -94,6 +95,28 @@ body{
   flex-direction:column;
   overflow:hidden;
   overscroll-behavior:none;
+}
+
+#particles-js{
+  position:fixed;
+  inset:0;
+  width:100%;
+  height:100%;
+  z-index:0;
+  background:var(--ink);
+  transition:background .2s ease;
+}
+
+#particles-js canvas{
+  display:block;
+}
+
+/* keep real UI above the particle layer */
+.hea,
+.stage,
+.foo{
+  position:relative;
+  z-index:1;
 }
 
 /* header */
@@ -500,6 +523,8 @@ input::file-selector-button:hover{
 </head>
 
 <body>
+
+<div id="particles-js"></div>
 
 <div id="hhh" class="hea">
   <a class="brand" href="https://youtu.be/pihJVwap7iI?si=ixIjT8pjO41Z8f2v">
@@ -980,6 +1005,56 @@ async function shr(x) {
     /* user cancelled the share sheet — nothing to do */
   }
 }
+
+/* --- animated particle background --- */
+function ferParticleColors(theme){
+  return theme === 'light'
+    ? { particle:'#a83d29', line:'#8f8874' }
+    : { particle:'#c85640', line:'#4a5265' };
+}
+
+function initFerParticles(theme){
+  if(typeof particlesJS === 'undefined') return;
+  const c = ferParticleColors(theme);
+  particlesJS('particles-js', {
+    particles:{
+      number:{ value:60, density:{ enable:true, value_area:900 } },
+      color:{ value:c.particle },
+      shape:{ type:'circle' },
+      opacity:{ value:0.45, random:true, anim:{ enable:true, speed:0.4, opacity_min:0.1, sync:false } },
+      size:{ value:2.5, random:true },
+      line_linked:{ enable:true, distance:130, color:c.line, opacity:0.35, width:1 },
+      move:{ enable:true, speed:1, direction:'none', random:true, straight:false, out_mode:'out', bounce:false }
+    },
+    interactivity:{
+      detect_on:'canvas',
+      events:{
+        onhover:{ enable:true, mode:'grab' },
+        onclick:{ enable:true, mode:'push' },
+        resize:true
+      },
+      modes:{
+        grab:{ distance:140, line_linked:{ opacity:0.6 } },
+        push:{ particles_nb:3 }
+      }
+    },
+    retina_detect:true
+  });
+}
+
+initFerParticles(document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark');
+
+/* re-theme particles whenever the user switches dark/light */
+const ferOrigToggleTheme = toggleTheme;
+toggleTheme = function(){
+  ferOrigToggleTheme();
+  const t = document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
+  if(window.pJSDom && window.pJSDom.length){
+    window.pJSDom.forEach(p => p.pJS.fn.vendors.destroypJS());
+    window.pJSDom = [];
+  }
+  initFerParticles(t);
+};
 
 async function impo(){
   const { value: userU } = await swalTheme.fire({
