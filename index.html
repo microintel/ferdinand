@@ -502,6 +502,63 @@ input::file-selector-button:hover{
   color:var(--ember);
 }
 
+.fer-progress-label{
+  margin-top:6px;
+  font-family:var(--mono);
+  font-size:0.72rem;
+  color:var(--text-lo);
+  text-align:center;
+}
+
+/* file status card — shown instead of raw ciphertext for binary/.fer flows,
+   so large encrypted payloads never sit in the DOM as text */
+p#pyy:has(.fer-file-card){
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+}
+
+.fer-file-card{
+  display:flex;
+  align-items:center;
+  gap:14px;
+  padding:18px;
+  max-width:100%;
+}
+
+.fer-file-card i{
+  font-size:1.8rem;
+  color:var(--ember);
+  flex-shrink:0;
+}
+
+.fer-file-info{
+  min-width:0;
+  text-align:left;
+}
+
+.fer-file-name{
+  font-family:var(--mono);
+  font-size:0.95rem;
+  color:var(--text-doc);
+  word-break:break-all;
+}
+
+.fer-file-meta{
+  font-family:var(--sans);
+  font-size:0.78rem;
+  color:var(--text-doc-lo);
+  margin-top:2px;
+}
+
+.fer-file-download{
+  display:block;
+  margin:16px auto 0;
+  max-width:240px;
+}
+
 /* theme toggle */
 .toolbar .theme-toggle{
   position:relative;
@@ -563,7 +620,7 @@ input::file-selector-button:hover{
 
   <div id="inpp" class="inps">
     <div class="file-field">
-      <input id="ii" type="file" accept=".txt,text/*,image/*,audio/*,video/*">
+      <input id="ii" type="file" accept=".txt,text/*,image/*,audio/*,video/*,.fer">
     </div>
     <div class="actions">
       <button class="btn btn-primary" onclick="ennx('e')"><i class="bi bi-lock-fill"></i> Conceal</button>
@@ -574,7 +631,7 @@ input::file-selector-button:hover{
 
 </main>
 
-<div class="foo">Developed by <strong>Microintel</strong></div>
+<div class="foo">Developed by <strong>Microintel, Dileep Kumar</strong></div>
 
 <script>
     const urlP = new URLSearchParams(window.location.search);
@@ -613,29 +670,30 @@ function toggleTheme(){
 
 updateThemeIcon(document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark');
 
-let ferProgTimer = null;
-
 function showProcessing(title){
   swalTheme.fire({
     title:title,
     html:`<img src="venom-load.gif" class="fer-load-mark" alt="">
-          <div class="fer-progress"><div class="fer-progress-bar" id="ferBar"></div></div>`,
+          <div class="fer-progress"><div class="fer-progress-bar" id="ferBar"></div></div>
+          <div class="fer-progress-label" id="ferBarLabel">0%</div>`,
     allowOutsideClick:false,
     allowEscapeKey:false,
-    showConfirmButton:false,
-    didOpen:()=>{
-      let bar = document.getElementById('ferBar');
-      let w = 0;
-      ferProgTimer = setInterval(()=>{
-        w = Math.min(w + Math.random()*20, 92);
-        if(bar) bar.style.width = w + '%';
-      }, 150);
-    }
+    showConfirmButton:false
   });
 }
 
+/* Drives the progress bar off real chunk counts (done/total) rather than a
+   fake timer — called from the chunked encrypt/decrypt loops as each 1 MiB
+   chunk finishes. */
+function updateProcessingProgress(done, total){
+  const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+  const bar = document.getElementById('ferBar');
+  const label = document.getElementById('ferBarLabel');
+  if(bar) bar.style.width = pct + '%';
+  if(label) label.textContent = pct + '% (' + done + '/' + total + ' chunks)';
+}
+
 function hideProcessing(){
-  if(ferProgTimer){ clearInterval(ferProgTimer); ferProgTimer = null; }
   Swal.close();
 }
 
@@ -707,243 +765,598 @@ function spea(x) {
 }
 
 let pas = "";
-let ferPendingFile = null;
-let ferPendingText = null;
-let ferEncryptedBlob = null;
-let ferEncryptedName = null;
-let ferDecryptedBlob = null;
-let ferDecryptedName = null;
-let ferObjectUrl = null;
+let ferPendingFile = null;     // File reference queued for chunked encryption — never read into memory up front
+let ferObjectUrl = null;       // tracks the current blob: URL so we can revoke it and avoid leaks
 
-/*
-  FER v3 binary container
-  - No Base64 for files
-  - No encrypted MB/GB strings in the DOM
-  - File is processed in chunks
-  - Each chunk gets a unique AES-GCM IV and authentication tag
-*/
-const FER_MAGIC = new TextEncoder().encode("FER3");
-const FER_VERSION = 3;
-const FER_CHUNK_SIZE = 1024 * 1024; // 1 MiB
-const FER_ITERATIONS = 150000;
+/* --- fast, chunked base64 <-> ArrayBuffer helpers ---
+   Chunking avoids call-stack limits and keeps things quick even at 10MB+. */
+const FER_B64_CHUNK = 0x8000;
 
-function ferU32(n){
-  const b=new Uint8Array(4), v=new DataView(b.buffer);
-  v.setUint32(0,n,false); return b;
+function ferBufToB64(buf){
+  const bytes = new Uint8Array(buf);
+  let binary = "";
+  for(let i=0; i<bytes.length; i+=FER_B64_CHUNK){
+    binary += String.fromCharCode.apply(null, bytes.subarray(i, i + FER_B64_CHUNK));
+  }
+  return btoa(binary);
 }
-function ferReadU32(buf, off){ return new DataView(buf,off,4).getUint32(0,false); }
-function ferConcat(parts){
-  return new Blob(parts,{type:"application/octet-stream"});
+
+function ferB64ToBuf(b64){
+  const binary = atob(b64);
+  const bytes = new Uint8Array(binary.length);
+  for(let i=0; i<binary.length; i++){ bytes[i] = binary.charCodeAt(i); }
+  return bytes.buffer;
 }
-function ferStatus(text){
-  const p=document.getElementById("pyy");
-  p.textContent=text;
-  p.contentEditable="false";
-}
-function ferSetProgress(done,total){
-  const bar=document.getElementById('ferBar');
-  if(bar && total) bar.style.width=Math.min(100,(done/total)*100).toFixed(1)+'%';
-}
-async function ferDeriveKey(password,salt,usage){
-  const km=await crypto.subtle.importKey("raw",new TextEncoder().encode(password),"PBKDF2",false,["deriveKey"]);
+
+/* Derive an AES-256-GCM key from the password using PBKDF2 (native, hardware-accelerated). */
+async function ferDeriveKey(password, salt, usage){
+  const keyMaterial = await crypto.subtle.importKey(
+    "raw", new TextEncoder().encode(password), "PBKDF2", false, ["deriveKey"]
+  );
   return crypto.subtle.deriveKey(
-    {name:"PBKDF2",salt,iterations:FER_ITERATIONS,hash:"SHA-256"},
-    km,{name:"AES-GCM",length:256},false,[usage]
+    { name:"PBKDF2", salt:salt, iterations:150000, hash:"SHA-256" },
+    keyMaterial,
+    { name:"AES-GCM", length:256 },
+    false,
+    [usage]
   );
 }
 
-/* Small text payloads remain convenient text; large files use FER3 binary. */
-async function ferEncryptText(plaintext,password){
-  const salt=crypto.getRandomValues(new Uint8Array(16));
-  const iv=crypto.getRandomValues(new Uint8Array(12));
-  const key=await ferDeriveKey(password,salt,"encrypt");
-  const ct=await crypto.subtle.encrypt({name:"AES-GCM",iv},key,new TextEncoder().encode(plaintext));
-  const b64=b=>btoa(String.fromCharCode(...new Uint8Array(b)));
-  return JSON.stringify({v:3,t:"txt",s:b64(salt),iv:b64(iv),ct:b64(ct)});
-}
-async function ferDecryptText(payloadStr,password){
-  const p=JSON.parse(payloadStr);
-  if(p.t!=="txt") throw new Error("not text");
-  const from64=x=>Uint8Array.from(atob(x),c=>c.charCodeAt(0));
-  const salt=from64(p.s), iv=from64(p.iv), ct=from64(p.ct).buffer;
-  const key=await ferDeriveKey(password,salt,"decrypt");
-  const plain=await crypto.subtle.decrypt({name:"AES-GCM",iv},key,ct);
-  return new TextDecoder().decode(plain);
+/* Core: encrypts a raw ArrayBuffer directly. No pre-inflation, no double base64 —
+   the ciphertext is base64'd exactly once, for storage as text. */
+async function ferEncryptBuf(plainBuf, password, extra){
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const key = await ferDeriveKey(password, salt, "encrypt");
+  const ct = await crypto.subtle.encrypt({ name:"AES-GCM", iv:iv }, key, plainBuf);
+  return JSON.stringify(Object.assign({
+    v:2,
+    s: ferBufToB64(salt.buffer),
+    iv: ferBufToB64(iv.buffer),
+    ct: ferBufToB64(ct)
+  }, extra || {}));
 }
 
-/*
- Header:
- magic(4) version(1) salt(16) chunkSize(4) chunkCount(4)
- nameLength(4) mimeLength(4) originalSize(8)
- name UTF-8, mime UTF-8
- Then repeated: ciphertextLength(4), ciphertext bytes
-*/
-async function ferEncryptFile(file,password){
-  const salt=crypto.getRandomValues(new Uint8Array(16));
-  const key=await ferDeriveKey(password,salt,"encrypt");
-  const nameBytes=new TextEncoder().encode(file.name);
-  const mimeBytes=new TextEncoder().encode(file.type||"application/octet-stream");
-  const chunks=Math.ceil(file.size/FER_CHUNK_SIZE);
-  const header=new Uint8Array(45);
-  header.set(FER_MAGIC,0);
-  header[4]=FER_VERSION;
-  header.set(salt,5);
-  new DataView(header.buffer).setUint32(21,FER_CHUNK_SIZE,false);
-  new DataView(header.buffer).setUint32(25,chunks,false);
-  new DataView(header.buffer).setUint32(29,nameBytes.length,false);
-  new DataView(header.buffer).setUint32(33,mimeBytes.length,false);
-  new DataView(header.buffer).setBigUint64(37,BigInt(file.size),false);
+async function ferDecryptBuf(payloadStr, password){
+  const payload = JSON.parse(payloadStr);
+  const salt = new Uint8Array(ferB64ToBuf(payload.s));
+  const iv = new Uint8Array(ferB64ToBuf(payload.iv));
+  const ct = ferB64ToBuf(payload.ct);
+  const key = await ferDeriveKey(password, salt, "decrypt");
+  const plainBuf = await crypto.subtle.decrypt({ name:"AES-GCM", iv:iv }, key, ct);
+  return { buf: plainBuf, t: payload.t, mime: payload.mime };
+}
 
-  const parts=[header,nameBytes,mimeBytes];
-  for(let i=0;i<chunks;i++){
-    const start=i*FER_CHUNK_SIZE;
-    const plain=await file.slice(start,Math.min(start+FER_CHUNK_SIZE,file.size)).arrayBuffer();
-    const iv=crypto.getRandomValues(new Uint8Array(12));
-    // Authenticate the chunk number too, preventing chunk reordering.
-    const aad=ferU32(i);
-    const ct=await crypto.subtle.encrypt({name:"AES-GCM",iv,additionalData:aad},key,plain);
-    const recordLen=12+ct.byteLength;
-    parts.push(ferU32(recordLen),iv,new Uint8Array(ct));
-    ferSetProgress(i+1,chunks);
-    if(i%8===0) await new Promise(requestAnimationFrame);
+/* Text convenience wrappers (used for plain text content) */
+async function ferEncrypt(plaintext, password){
+  return ferEncryptBuf(new TextEncoder().encode(plaintext), password, { t:'txt' });
+}
+
+async function ferDecrypt(payloadStr, password){
+  const { buf, t } = await ferDecryptBuf(payloadStr, password);
+  if(t && t !== 'txt') throw new Error('not text');
+  return new TextDecoder().decode(buf);
+}
+
+/* ============================================================
+   Chunked binary (.fer) engine — used for image/audio/video files
+   and any decrypted .fer file.
+
+   Files are never fully loaded into RAM: the source is read via
+   File.slice() in FER_CHUNK_SIZE (1 MiB) pieces, one at a time,
+   on both the encrypt and decrypt side. Each chunk gets its own
+   random IV and is AES-256-GCM authenticated with AAD that binds
+   it to the file header, its index, and the total chunk count —
+   so chunks can't be reordered, dropped, or spliced from another
+   file without the GCM tag failing to verify. Output is written
+   straight to disk via the File System Access API when available,
+   or assembled into a Blob otherwise — no base64, and the ciphertext
+   never touches the DOM.
+   ============================================================ */
+
+const FER_MAGIC = 'FER1';
+const FER_VERSION = 3;
+const FER_CHUNK_SIZE = 1024 * 1024; // 1 MiB
+
+function ferU32(n){
+  const b = new Uint8Array(4);
+  new DataView(b.buffer).setUint32(0, n, true);
+  return b;
+}
+
+function ferReadU32(bytes){
+  return new DataView(bytes.buffer, bytes.byteOffset, 4).getUint32(0, true);
+}
+
+function ferConcatBytes(...arrs){
+  let len = 0;
+  for(const a of arrs) len += a.length;
+  const out = new Uint8Array(len);
+  let o = 0;
+  for(const a of arrs){ out.set(a, o); o += a.length; }
+  return out;
+}
+
+/* Binds a chunk's ciphertext to the exact header bytes, its position, and
+   the declared total chunk count. */
+function ferChunkAAD(headerBytes, index, count){
+  return ferConcatBytes(headerBytes, ferU32(index), ferU32(count));
+}
+
+/* Sink that just collects Uint8Array parts for a final Blob — used when
+   File System Access isn't available, or when the result needs to stay
+   in memory for preview (revealed images/audio/video). */
+function ferMakeBlobSink(mimeType){
+  const parts = [];
+  return {
+    write: async (bytes) => { parts.push(bytes); },
+    finish: async () => new Blob(parts, { type: mimeType || 'application/octet-stream' }),
+    close: async () => {}
+  };
+}
+
+/* Sink that streams straight to a file on disk — nothing is buffered in
+   memory on the output side either. Falls back to null (caller should use
+   ferMakeBlobSink instead) if the API is unavailable or the user cancels. */
+async function ferMakeFileSink(suggestedName){
+  if(!window.showSaveFilePicker) return null;
+  try{
+    const handle = await window.showSaveFilePicker({ suggestedName });
+    const writable = await handle.createWritable();
+    return {
+      write: async (bytes) => { await writable.write(bytes); },
+      finish: async () => null,
+      close: async () => { await writable.close(); }
+    };
+  }catch(err){
+    if(err && err.name === 'AbortError') throw err;
+    return null;
   }
-  return ferConcat(parts);
 }
 
-async function ferDecryptFile(file,password){
-  const fixed=await file.slice(0,45).arrayBuffer();
-  if(fixed.byteLength<45) throw new Error("Invalid FER file");
-  const h=new Uint8Array(fixed);
-  if(String.fromCharCode(...h.slice(0,4))!=="FER3" || h[4]!==3) throw new Error("Unsupported file format");
-  const salt=h.slice(5,21);
-  const chunkSize=ferReadU32(fixed,21);
-  const chunks=ferReadU32(fixed,25);
-  const nameLen=ferReadU32(fixed,29);
-  const mimeLen=ferReadU32(fixed,33);
-  const meta=await file.slice(45,45+nameLen+mimeLen).arrayBuffer();
-  const mb=new Uint8Array(meta);
-  const dec=new TextDecoder();
-  const name=dec.decode(mb.slice(0,nameLen));
-  const mime=dec.decode(mb.slice(nameLen,nameLen+mimeLen))||"application/octet-stream";
-  const key=await ferDeriveKey(password,salt,"decrypt");
-  let pos=45+nameLen+mimeLen;
-  const parts=[];
-  for(let i=0;i<chunks;i++){
-    const lenBuf=await file.slice(pos,pos+4).arrayBuffer();
-    if(lenBuf.byteLength!==4) throw new Error("Corrupt chunk length");
-    const len=ferReadU32(lenBuf,0);
-    const rec=await file.slice(pos+4,pos+4+len).arrayBuffer();
-    if(rec.byteLength!==len || len<28) throw new Error("Corrupt chunk");
-    const iv=new Uint8Array(rec,0,12);
-    const ct=rec.slice(12);
-    const plain=await crypto.subtle.decrypt(
-      {name:"AES-GCM",iv,additionalData:ferU32(i)},key,ct
-    );
-    parts.push(new Uint8Array(plain));
-    pos+=4+len;
-    ferSetProgress(i+1,chunks);
-    if(i%8===0) await new Promise(requestAnimationFrame);
+/* Encrypts a File in 1 MiB chunks read straight off disk. */
+async function ferEncryptFileChunked(file, password, sink, onProgress){
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const key = await ferDeriveKey(password, salt, 'encrypt');
+  const chunkCount = Math.max(1, Math.ceil(file.size / FER_CHUNK_SIZE));
+
+  const header = {
+    name: file.name,
+    mime: file.type || 'application/octet-stream',
+    size: file.size,
+    chunkSize: FER_CHUNK_SIZE,
+    chunkCount: chunkCount
+  };
+  const headerBytes = new TextEncoder().encode(JSON.stringify(header));
+
+  await sink.write(new TextEncoder().encode(FER_MAGIC));
+  await sink.write(new Uint8Array([FER_VERSION]));
+  await sink.write(ferU32(headerBytes.length));
+  await sink.write(headerBytes);
+  await sink.write(salt);
+
+  for(let i=0; i<chunkCount; i++){
+    const start = i * FER_CHUNK_SIZE;
+    const end = Math.min(start + FER_CHUNK_SIZE, file.size);
+    const plainChunk = await file.slice(start, end).arrayBuffer();
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const aad = ferChunkAAD(headerBytes, i, chunkCount);
+    const ctBuf = await crypto.subtle.encrypt({ name:'AES-GCM', iv, additionalData: aad }, key, plainChunk);
+    const ctBytes = new Uint8Array(ctBuf);
+
+    await sink.write(iv);
+    await sink.write(ferU32(ctBytes.length));
+    await sink.write(ctBytes);
+
+    if(onProgress) onProgress(i + 1, chunkCount);
+    if(i % 4 === 3) await new Promise(r => setTimeout(r, 0)); // keep UI responsive
   }
-  return {blob:new Blob(parts,{type:mime}),name,mime,size:chunkSize};
+
+  return sink.finish();
 }
 
-function ferDownload(blob,name){
-  const u=URL.createObjectURL(blob), a=document.createElement("a");
-  a.href=u; a.download=name; a.click();
-  setTimeout(()=>URL.revokeObjectURL(u),1000);
+/* Decrypts a .fer File in the same 1 MiB-aligned chunks it was written in.
+   Every chunk's AAD is re-verified on decrypt, and the total decrypted size
+   is checked against the header, so a truncated, reordered or tampered
+   file is rejected instead of silently accepted. */
+async function ferDecryptFileChunked(file, password, sink, onProgress){
+  let offset = 0;
+  const readBytes = async (n) => {
+    const buf = await file.slice(offset, offset + n).arrayBuffer();
+    offset += n;
+    if(buf.byteLength !== n) throw new Error('Unexpected end of file');
+    return new Uint8Array(buf);
+  };
+
+  const magic = await readBytes(4);
+  if(new TextDecoder().decode(magic) !== FER_MAGIC) throw new Error('Not a Ferdinand (.fer) file');
+  const version = (await readBytes(1))[0];
+  if(version !== FER_VERSION) throw new Error('Unsupported .fer version');
+
+  const headerLen = ferReadU32(await readBytes(4));
+  const headerBytes = await readBytes(headerLen);
+  const header = JSON.parse(new TextDecoder().decode(headerBytes));
+  const salt = await readBytes(16);
+  const key = await ferDeriveKey(password, salt, 'decrypt');
+
+  let totalOut = 0;
+  for(let i=0; i<header.chunkCount; i++){
+    const iv = await readBytes(12);
+    const ctLen = ferReadU32(await readBytes(4));
+    const ctBytes = await readBytes(ctLen);
+    const aad = ferChunkAAD(headerBytes, i, header.chunkCount);
+    let plainBuf;
+    try{
+      plainBuf = await crypto.subtle.decrypt({ name:'AES-GCM', iv, additionalData: aad }, key, ctBytes);
+    }catch(err){
+      throw new Error('Incorrect password or corrupted file');
+    }
+    await sink.write(new Uint8Array(plainBuf));
+    totalOut += plainBuf.byteLength;
+
+    if(onProgress) onProgress(i + 1, header.chunkCount);
+    if(i % 4 === 3) await new Promise(r => setTimeout(r, 0));
+  }
+
+  if(totalOut !== header.size) throw new Error('File is incomplete or was tampered with');
+
+  const outBlob = await sink.finish();
+  return { blob: outBlob, name: header.name, mime: header.mime };
+}
+
+function ferHumanSize(bytes){
+  if(bytes < 1024) return bytes + ' B';
+  const units = ['KB','MB','GB','TB'];
+  let u = -1;
+  do { bytes /= 1024; u++; } while(bytes >= 1024 && u < units.length - 1);
+  return bytes.toFixed(1) + ' ' + units[u];
+}
+
+function ferShowFileReady(file){
+  const p = document.getElementById('pyy');
+  p.textContent = '';
+  const card = document.createElement('div');
+  card.className = 'fer-file-card';
+  card.innerHTML = `<i class="bi bi-file-earmark-lock2"></i>
+    <div class="fer-file-info">
+      <div class="fer-file-name"></div>
+      <div class="fer-file-meta"></div>
+    </div>`;
+  card.querySelector('.fer-file-name').textContent = file.name;
+  card.querySelector('.fer-file-meta').textContent = ferHumanSize(file.size);
+  p.appendChild(card);
+}
+
+function ferShowFileEncrypted(outName, blob, savedToDisk){
+  const p = document.getElementById('pyy');
+  p.textContent = '';
+  const card = document.createElement('div');
+  card.className = 'fer-file-card fer-file-card-done';
+  card.innerHTML = `<i class="bi bi-shield-lock-fill"></i>
+    <div class="fer-file-info">
+      <div class="fer-file-name"></div>
+      <div class="fer-file-meta"></div>
+    </div>`;
+  card.querySelector('.fer-file-name').textContent = outName;
+  card.querySelector('.fer-file-meta').textContent = savedToDisk ? 'Saved to disk' : 'Encrypted — ready to download';
+  p.appendChild(card);
+
+  if(!savedToDisk && blob){
+    const dl = document.createElement('button');
+    dl.type = 'button';
+    dl.className = 'btn btn-primary fer-file-download';
+    dl.innerHTML = '<i class="bi bi-download"></i> Download .fer';
+    dl.onclick = ()=>{
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = outName; a.click();
+      URL.revokeObjectURL(url);
+    };
+    p.appendChild(dl);
+  }
+}
+
+async function ferEncryptPendingFile(){
+  const file = ferPendingFile;
+  const password = pas;
+  const outName = file.name.replace(/\.[^.]*$/, '') + '.fer';
+
+  let sink;
+  let streamedToDisk = false;
+  try{
+    sink = await ferMakeFileSink(outName);
+    streamedToDisk = !!sink;
+    if(!sink) sink = ferMakeBlobSink('application/octet-stream');
+
+    const blob = await ferEncryptFileChunked(file, password, sink, (done, total)=>{
+      updateProcessingProgress(done, total);
+    });
+    if(sink.close) await sink.close();
+
+    hideProcessing();
+    pas = "";
+    ferPendingFile = null;
+    ferShowFileEncrypted(outName, blob, streamedToDisk);
+    if(streamedToDisk) toast('success','Saved','Encrypted file saved to disk.');
+  }catch(err){
+    hideProcessing();
+    pas = "";
+    ferPendingFile = null;
+    if(err && err.name === 'AbortError') return; // user cancelled the save dialog
+    toast('error','Concealing failed','Something went wrong while concealing this file.');
+  }
+}
+
+async function ferRevealFile(file){
+  const pw = await askPassword('Enter the password to reveal');
+  if(!pw){ return; }
+  pas = pw;
+
+  document.getElementById("inpp").querySelectorAll('.btn').forEach(b=>b.disabled=true);
+  showProcessing('Revealing…');
+  await new Promise(r=>setTimeout(r, 50));
+
+  let result;
+  try{
+    const sink = ferMakeBlobSink();
+    result = await ferDecryptFileChunked(file, pas, sink, (done, total)=>{
+      updateProcessingProgress(done, total);
+    });
+  }catch(err){
+    hideProcessing();
+    pas = "";
+    document.getElementById("inpp").querySelectorAll('.btn').forEach(b=>b.disabled=false);
+    toast('error','Incorrect password','This file could not be revealed.');
+    return;
+  }
+
+  hideProcessing();
+  pas = "";
+  document.getElementById("inpp").querySelectorAll('.btn').forEach(b=>b.disabled=false);
+
+  if (speechSynthesis.speaking) { speechSynthesis.cancel(); }
+  const prevMedia = document.getElementById("audioid") || document.getElementById("videoid");
+  if (prevMedia) { prevMedia.pause(); }
+  const playBtn = document.getElementById("play") || document.getElementById("pause");
+  if (playBtn) { playBtn.id = "play"; playBtn.className = "bi bi-play-fill"; }
+  if(ferObjectUrl){ URL.revokeObjectURL(ferObjectUrl); ferObjectUrl = null; }
+
+  const p = document.getElementById("pyy");
+  p.textContent = '';
+  p.contentEditable = 'false';
+
+  const typedBlob = result.blob.slice(0, result.blob.size, result.mime);
+  ferObjectUrl = URL.createObjectURL(typedBlob);
+
+  if(result.mime.startsWith('image/')){
+    let ie = document.createElement('img');
+    ie.src = ferObjectUrl;
+    p.appendChild(ie);
+  } else if(result.mime.startsWith('audio/')){
+    let amark = document.createElement('div');
+    amark.className = 'fer-audio-mark';
+    amark.innerHTML = '<i class="bi bi-music-note-beamed"></i>';
+    p.appendChild(amark);
+    let iae = document.createElement('audio');
+    iae.id = 'audioid'; iae.src = ferObjectUrl; iae.controls = false;
+    p.appendChild(iae);
+  } else if(result.mime.startsWith('video/')){
+    let ive = document.createElement('video');
+    ive.id = 'videoid'; ive.src = ferObjectUrl; ive.controls = false;
+    p.appendChild(ive);
+  } else {
+    ferShowFileEncrypted(result.name, null, false);
+    p.querySelector('.fer-file-meta').textContent = 'Revealed — ready to download';
+    p.querySelector('.fer-file-card i').className = 'bi bi-file-earmark-check';
+  }
+
+  const dl = document.createElement('button');
+  dl.type = 'button';
+  dl.className = 'btn btn-secondary fer-file-download';
+  dl.innerHTML = '<i class="bi bi-download"></i> Download original';
+  dl.onclick = ()=>{
+    const a = document.createElement('a');
+    a.href = ferObjectUrl; a.download = result.name; a.click();
+  };
+  p.appendChild(dl);
 }
 
 async function ennx(x){
-  const title=x==='e'?'Enter a password to conceal':'Enter the password to reveal';
-  const pw=await askPassword(title); if(!pw)return;
-  pas=pw;
+  const title = x === 'e' ? 'Enter a password to conceal' : 'Enter the password to reveal';
+  const pw = await askPassword(title);
+  if(!pw){ return; }
+  pas = pw;
+
   document.getElementById("inpp").querySelectorAll('.btn').forEach(b=>b.disabled=true);
-  showProcessing(x==='e'?'Concealing securely…':'Revealing securely…');
-  await new Promise(r=>setTimeout(r,50));
+  showProcessing(x === 'e' ? 'Concealing…' : 'Revealing…');
+
+  /* brief yield so the modal paints before the (now fast, async, non-blocking) crypto work runs */
+  await new Promise(r=>setTimeout(r, 50));
+
   try{
-    if(x==='e') await enn(); else await ddd();
-  }catch(err){
-    hideProcessing();
-    console.error(err);
-    toast('error',x==='e'?'Concealing failed':'Reveal failed',err.message||'The file could not be processed.');
-  }finally{
-    pas="";
+    if(x === 'e'){ await enn(); } else { await ddd(); }
+  } finally {
     document.getElementById("inpp").querySelectorAll('.btn').forEach(b=>b.disabled=false);
   }
 }
 
-document.getElementById("ii").addEventListener("change",async e=>{
-  const file=e.target.files[0]; e.target.value="";
-  if(!file)return;
-  if(file.name.toLowerCase().endsWith(".fer")){
-    ferPendingFile=file; ferPendingText=null;
-    ferStatus(`Encrypted file ready: ${file.name}\nSize: ${(file.size/1048576).toFixed(2)} MB\n\nPress Reveal to decrypt.`);
-    return;
+document.getElementById("ii").addEventListener("change", (e)=>{
+  let ff = e.target.files[0];
+  if(!ff) return;
+
+  if (speechSynthesis.speaking) { speechSynthesis.cancel(); }
+  const prevMedia = document.getElementById("audioid") || document.getElementById("videoid");
+  if (prevMedia) { prevMedia.pause(); }
+  const playBtn = document.getElementById("play") || document.getElementById("pause");
+  if (playBtn) { playBtn.id = "play"; playBtn.className = "bi bi-play-fill"; }
+  if(ferObjectUrl){ URL.revokeObjectURL(ferObjectUrl); ferObjectUrl = null; }
+  ferPendingFile = null;
+
+  const isFerFile = ff.name.toLowerCase().endsWith('.fer');
+
+  if(isFerFile){
+    /* An encrypted Ferdinand file — decrypted straight off disk, chunk by chunk. */
+    document.getElementById("pyy").contentEditable = "false";
+    ferRevealFile(ff);
+
+  } else if(ff.type.includes("text")){
+    /* Text is still read fully so it can be edited in place — no size cap either way. */
+    document.getElementById("pyy").contentEditable = "true";
+    let fi = new FileReader();
+    fi.onload = (e)=>{
+      document.getElementById("pyy").textContent = e.target.result;
+    };
+    fi.readAsText(ff);
+    document.getElementById("pyy").textContent = "Reading file contents…";
+
+  } else if(ff.type.includes("image") || ff.type.includes("audio") || ff.type.includes("video")){
+    /* Kept only as a File reference — nothing is read into memory here.
+       Encryption streams the bytes straight off disk in 1 MiB chunks. */
+    document.getElementById("pyy").contentEditable = "false";
+    ferPendingFile = ff;
+    ferShowFileReady(ff);
+    ennx("e");
+
+  } else {
+    toast('warning','Unsupported file type','Ferdinand supports text, image, audio and video files (and .fer encrypted files) only.');
   }
-  if(file.type.startsWith("text/") && file.size<=10*1024*1024){
-    ferPendingFile=null;
-    const text=await file.text();
-    ferPendingText=text;
-    document.getElementById("pyy").textContent=text;
-    document.getElementById("pyy").contentEditable="true";
-    return;
-  }
-  // Keep the File object: do NOT read the whole file into RAM.
-  ferPendingFile=file; ferPendingText=null;
-  ferStatus(`Ready to encrypt: ${file.name}\nSize: ${(file.size/1048576).toFixed(2)} MB\n\nProcessed in 1 MiB authenticated chunks. The whole file is never loaded into memory at once.`);
-  ennx('e');
+
+  e.target.value = "";
 });
 
 async function enn(){
   if(ferPendingFile){
-    const out=await ferEncryptFile(ferPendingFile,pas);
-    ferEncryptedBlob=out;
-    ferEncryptedName=ferPendingFile.name+".fer";
-    ferStatus(`✓ Encryption complete\n\nOriginal: ${ferPendingFile.name}\nEncrypted: ${ferEncryptedName}\nSize: ${(out.size/1048576).toFixed(2)} MB\n\nUse Download to save the encrypted binary file.`);
-    ferPendingFile=null;
+    await ferEncryptPendingFile();
     return;
   }
-  const text=ferPendingText!==null?ferPendingText:document.getElementById("pyy").textContent;
-  const encoded=await ferEncryptText(text,pas);
-  document.getElementById("pyy").textContent=encoded;
-  document.getElementById("pyy").contentEditable="true";
-  ferPendingText=null;
+  let encoded;
+  try{
+    let ddt = document.getElementById("pyy").textContent;
+    encoded = await ferEncrypt(ddt, pas);
+  }catch(err){
+    hideProcessing();
+    pas = "";
+    toast('error','Concealing failed','Something went wrong while concealing this content.');
+    return;
+  }
+  hideProcessing();
+  document.getElementById("pyy").textContent = encoded;
+  pas = "";
 }
 
 async function ddd(){
-  if(ferPendingFile && ferPendingFile.name.toLowerCase().endsWith(".fer")){
-    const result=await ferDecryptFile(ferPendingFile,pas);
-    ferDecryptedBlob=result.blob;
-    ferDecryptedName=result.name;
-    ferStatus(`✓ Decryption complete\n\nFile: ${result.name}\nType: ${result.mime}\nSize: ${(result.blob.size/1048576).toFixed(2)} MB\n\nUse Download to save the original file.`);
-    ferPendingFile=null;
+  let ddt = document.getElementById("pyy").textContent;
+  let result;
+  try{
+    result = await ferDecryptBuf(ddt, pas);
+    if(!result || !result.buf) throw new Error('empty');
+  }catch(err){
+    hideProcessing();
+    pas = "";
+    toast('error','Incorrect password','This content could not be revealed.');
     return;
   }
-  const text=await ferDecryptText(document.getElementById("pyy").textContent,pas);
-  document.getElementById("pyy").textContent=text;
-  document.getElementById("pyy").contentEditable="true";
+
+  hideProcessing();
+  pas = "";
+
+  if (speechSynthesis.speaking) { speechSynthesis.cancel(); }
+  const prevMedia = document.getElementById("audioid") || document.getElementById("videoid");
+  if (prevMedia) { prevMedia.pause(); }
+  const playBtn = document.getElementById("play") || document.getElementById("pause");
+  if (playBtn) { playBtn.id = "play"; playBtn.className = "bi bi-play-fill"; }
+
+  /* release any previous blob: URL before creating a new one */
+  if(ferObjectUrl){ URL.revokeObjectURL(ferObjectUrl); ferObjectUrl = null; }
+
+  document.getElementById("pyy").textContent = "";
+  document.getElementById("pyy").contentEditable = "true";
+
+  if(result.t === 'bin' && result.mime){
+    const blob = new Blob([result.buf], { type: result.mime });
+    ferObjectUrl = URL.createObjectURL(blob);
+
+    if(result.mime.startsWith("image/")){
+      let ie = document.createElement("img");
+      ie.src = ferObjectUrl;
+      document.getElementById("pyy").appendChild(ie);
+      document.getElementById("pyy").contentEditable = "false";
+
+    } else if(result.mime.startsWith("audio/")){
+      let amark = document.createElement("div");
+      amark.className = "fer-audio-mark";
+      amark.innerHTML = '<i class="bi bi-music-note-beamed"></i>';
+      document.getElementById("pyy").appendChild(amark);
+
+      let iae = document.createElement("audio");
+      iae.id = "audioid";
+      iae.src = ferObjectUrl;
+      iae.controls = false;
+      document.getElementById("pyy").appendChild(iae);
+      document.getElementById("pyy").contentEditable = "false";
+
+    } else if(result.mime.startsWith("video/")){
+      let ive = document.createElement("video");
+      ive.id = "videoid";
+      ive.src = ferObjectUrl;
+      ive.controls = false;
+      document.getElementById("pyy").appendChild(ive);
+      document.getElementById("pyy").contentEditable = "false";
+    }
+
+  } else {
+    document.getElementById("pyy").textContent = new TextDecoder().decode(result.buf);
+  }
 }
 
 async function pri(){
-  if(ferEncryptedBlob){ ferDownload(ferEncryptedBlob,ferEncryptedName||"encrypted.fer"); return; }
-  if(ferDecryptedBlob){ ferDownload(ferDecryptedBlob,ferDecryptedName||"decrypted.bin"); return; }
-  const con=document.getElementById("pyy").textContent;
-  if(!con.trim()){toast('info','Nothing to download','Add some content first.');return;}
-  const {value:name}=await swalTheme.fire({title:'Download text',input:'text',inputValue:'ferdinand.txt',showCancelButton:true});
-  if(name) ferDownload(new Blob([con],{type:"text/plain"}),name);
-}
-
-async function shr(x){
-  const blob=ferEncryptedBlob||ferDecryptedBlob;
-  const name=ferEncryptedBlob?ferEncryptedName:ferDecryptedName;
-  if(x==='fs' && blob && navigator.share){
-    try{await navigator.share({files:[new File([blob],name,{type:blob.type||"application/octet-stream"})]});}catch(e){}
+  let con = document.getElementById("pyy").textContent;
+  if(!con || !con.trim()){
+    toast('info','Nothing to download','Add some content first.');
     return;
   }
-  const con=document.getElementById("pyy").textContent;
-  if(!con.trim()){toast('info','Nothing to share','Add some content first.');return;}
-  if(!navigator.share){toast('info','Sharing unavailable','Your browser does not support sharing.');return;}
-  try{await navigator.share({text:con});}catch(e){}
+  const { value: fina } = await swalTheme.fire({
+    title:'Download file',
+    icon:'question',
+    iconHtml:'<i class="bi bi-download"></i>',
+    iconColor:'#b0442f',
+    input:'text',
+    inputValue:'ferdinand.txt',
+    showCancelButton:true,
+    confirmButtonText:'Download',
+    inputValidator:(v)=> !v ? 'Please enter a file name' : undefined
+  });
+  if(!fina) return;
+
+  let bb = new Blob([con], {type:"text/plain"});
+  let xx = document.createElement("a");
+  xx.href = URL.createObjectURL(bb);
+  xx.download = fina;
+  xx.click();
+  URL.revokeObjectURL(xx.href);
+}
+
+async function shr(x) {
+  let con = document.getElementById("pyy").textContent;
+  if(!con || !con.trim()){
+    toast('info','Nothing to share','Add some content first.');
+    return;
+  }
+  if(!navigator.share){
+    toast('info','Sharing unavailable','Your browser does not support the Share feature.');
+    return;
+  }
+  try{
+    if(x === 'fs'){
+      let bb = new Blob([con], { type:"text/plain" });
+      let file = new File([bb], "ferdinand.txt", { type:"text/plain" });
+      await navigator.share({ files:[file] });
+    } else {
+      await navigator.share({ text:con });
+    }
+  }catch(err){
+    /* user cancelled the share sheet — nothing to do */
+  }
 }
 
 /* --- animated particle background --- */
@@ -1030,5 +1443,6 @@ async function impo(){
 
 
 </html>
+
 
 
