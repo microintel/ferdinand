@@ -10,7 +10,6 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
 <script>
   /* Apply saved theme before first paint to avoid a flash of the wrong theme. Default: dark. */
   (function(){
@@ -84,10 +83,10 @@ body{
   height:100%;
   height:100dvh;
   margin:0;
-  background:transparent;
+  background:var(--ink);
   color:var(--text-hi);
   font-family:var(--sans);
-  transition:color .2s ease;
+  transition:color .2s ease, background .2s ease;
 }
 
 body{
@@ -97,21 +96,7 @@ body{
   overscroll-behavior:none;
 }
 
-#particles-js{
-  position:fixed;
-  inset:0;
-  width:100%;
-  height:100%;
-  z-index:0;
-  background:var(--ink);
-  transition:background .2s ease;
-}
-
-#particles-js canvas{
-  display:block;
-}
-
-/* keep real UI above the particle layer */
+/* keep real UI above z-index:0 background layers */
 .hea,
 .stage,
 .foo{
@@ -542,7 +527,6 @@ input::file-selector-button:hover{
 
 <body>
 
-<div id="particles-js"></div>
 
 <div id="hhh" class="hea">
   <a class="brand" href="https://youtu.be/pihJVwap7iI?si=ixIjT8pjO41Z8f2v">
@@ -641,7 +625,7 @@ function updateProcessingProgress(done, total){
   const bar = document.getElementById('ferBar');
   const label = document.getElementById('ferBarLabel');
   if(bar) bar.style.width = pct + '%';
-  if(label) label.textContent = pct + '% (' + done + '/' + total + ' chunks)';
+  if(label) label.textContent = pct + '%';
 }
 
 function hideProcessing(){
@@ -717,7 +701,6 @@ function spea(x) {
 
 let pas = "";
 let ferPendingFile = null;     // File reference queued for chunked encryption — never read into memory up front
-let ferObjectUrl = null;       // tracks the current blob: URL so we can revoke it and avoid leaks
 
 /* --- fast, chunked base64 <-> ArrayBuffer helpers ---
    Chunking avoids call-stack limits and keeps things quick even at 10MB+. */
@@ -946,7 +929,6 @@ document.getElementById("ii").addEventListener("change", (e)=>{
   if (prevMedia) { prevMedia.pause(); }
   const playBtn = document.getElementById("play") || document.getElementById("pause");
   if (playBtn) { playBtn.id = "play"; playBtn.className = "bi bi-play-fill"; }
-  if(ferObjectUrl){ URL.revokeObjectURL(ferObjectUrl); ferObjectUrl = null; }
   ferPendingFile = null;
 
   if(ff.type.includes("text")){
@@ -984,6 +966,20 @@ document.getElementById("ii").addEventListener("change", (e)=>{
   e.target.value = "";
 });
 
+function ferDownloadBlob(blob, filename){
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename; a.click();
+  URL.revokeObjectURL(url);
+}
+
+function ferGuessFilename(mime, fallback){
+  if(!mime) return fallback;
+  const sub = mime.split('/')[1];
+  const ext = sub ? sub.split(';')[0] : 'bin';
+  return fallback + '.' + ext;
+}
+
 async function enn(){
   let encoded;
   try{
@@ -1003,10 +999,19 @@ async function enn(){
     return;
   }
   hideProcessing();
-  document.getElementById("pyy").textContent = encoded;
-  document.getElementById("pyy").contentEditable = "true";
   pas = "";
-  ferPendingFile = null;
+
+  if(ferPendingFile){
+    const outName = ferPendingFile.name.replace(/\.[^.]*$/, '') + '.txt';
+    ferDownloadBlob(new Blob([encoded], { type: 'text/plain' }), outName);
+    document.getElementById("pyy").textContent = 'Encrypted — ' + outName + ' downloaded.';
+    document.getElementById("pyy").contentEditable = "true";
+    ferPendingFile = null;
+    toast('success','Encrypted','Your encrypted file has been downloaded.');
+  } else {
+    document.getElementById("pyy").textContent = encoded;
+    document.getElementById("pyy").contentEditable = "true";
+  }
 }
 
 async function ddd(){
@@ -1024,7 +1029,7 @@ async function ddd(){
       const r = await ferDecryptTextChunked(ddt, pas, (done, total)=>{
         updateProcessingProgress(done, total);
       });
-      result = { buf: await r.blob.arrayBuffer(), t:'bin', mime: r.mime };
+      result = { buf: await r.blob.arrayBuffer(), t:'bin', mime: r.mime, name: r.name };
     }catch(errChunked){
       hideProcessing();
       pas = "";
@@ -1042,43 +1047,27 @@ async function ddd(){
   const playBtn = document.getElementById("play") || document.getElementById("pause");
   if (playBtn) { playBtn.id = "play"; playBtn.className = "bi bi-play-fill"; }
 
-  /* release any previous blob: URL before creating a new one */
-  if(ferObjectUrl){ URL.revokeObjectURL(ferObjectUrl); ferObjectUrl = null; }
-
   document.getElementById("pyy").textContent = "";
   document.getElementById("pyy").contentEditable = "true";
 
-  if(result.t === 'bin' && result.mime){
+  const isMedia = result.mime && (
+    result.mime.startsWith("image/") ||
+    result.mime.startsWith("audio/") ||
+    result.mime.startsWith("video/")
+  );
+
+  if(isMedia){
     const blob = new Blob([result.buf], { type: result.mime });
-    ferObjectUrl = URL.createObjectURL(blob);
+    const filename = result.name || ferGuessFilename(result.mime, 'decrypted-file');
+    ferDownloadBlob(blob, filename);
+    document.getElementById("pyy").textContent = 'Decrypted — ' + filename + ' downloaded.';
+    toast('success','Decrypted','Your decrypted file has been downloaded.');
 
-    if(result.mime.startsWith("image/")){
-      let ie = document.createElement("img");
-      ie.src = ferObjectUrl;
-      document.getElementById("pyy").appendChild(ie);
-      document.getElementById("pyy").contentEditable = "false";
-
-    } else if(result.mime.startsWith("audio/")){
-      let amark = document.createElement("div");
-      amark.className = "fer-audio-mark";
-      amark.innerHTML = '<i class="bi bi-music-note-beamed"></i>';
-      document.getElementById("pyy").appendChild(amark);
-
-      let iae = document.createElement("audio");
-      iae.id = "audioid";
-      iae.src = ferObjectUrl;
-      iae.controls = false;
-      document.getElementById("pyy").appendChild(iae);
-      document.getElementById("pyy").contentEditable = "false";
-
-    } else if(result.mime.startsWith("video/")){
-      let ive = document.createElement("video");
-      ive.id = "videoid";
-      ive.src = ferObjectUrl;
-      ive.controls = false;
-      document.getElementById("pyy").appendChild(ive);
-      document.getElementById("pyy").contentEditable = "false";
-    }
+  } else if(result.t === 'bin'){
+    const filename = result.name || ferGuessFilename(result.mime, 'decrypted-file');
+    ferDownloadBlob(new Blob([result.buf], { type: result.mime || 'application/octet-stream' }), filename);
+    document.getElementById("pyy").textContent = 'Decrypted — ' + filename + ' downloaded.';
+    toast('success','Decrypted','Your decrypted file has been downloaded.');
 
   } else {
     document.getElementById("pyy").textContent = new TextDecoder().decode(result.buf);
@@ -1134,56 +1123,6 @@ async function shr(x) {
     /* user cancelled the share sheet — nothing to do */
   }
 }
-
-/* --- animated particle background --- */
-function ferParticleColors(theme){
-  return theme === 'light'
-    ? { particle:'#a83d29', line:'#8f8874' }
-    : { particle:'#c85640', line:'#4a5265' };
-}
-
-function initFerParticles(theme){
-  if(typeof particlesJS === 'undefined') return;
-  const c = ferParticleColors(theme);
-  particlesJS('particles-js', {
-    particles:{
-      number:{ value:60, density:{ enable:true, value_area:900 } },
-      color:{ value:c.particle },
-      shape:{ type:'circle' },
-      opacity:{ value:0.45, random:true, anim:{ enable:true, speed:0.4, opacity_min:0.1, sync:false } },
-      size:{ value:2.5, random:true },
-      line_linked:{ enable:true, distance:130, color:c.line, opacity:0.35, width:1 },
-      move:{ enable:true, speed:1, direction:'none', random:true, straight:false, out_mode:'out', bounce:false }
-    },
-    interactivity:{
-      detect_on:'canvas',
-      events:{
-        onhover:{ enable:true, mode:'grab' },
-        onclick:{ enable:true, mode:'push' },
-        resize:true
-      },
-      modes:{
-        grab:{ distance:140, line_linked:{ opacity:0.6 } },
-        push:{ particles_nb:3 }
-      }
-    },
-    retina_detect:true
-  });
-}
-
-initFerParticles(document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark');
-
-/* re-theme particles whenever the user switches dark/light */
-const ferOrigToggleTheme = toggleTheme;
-toggleTheme = function(){
-  ferOrigToggleTheme();
-  const t = document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
-  if(window.pJSDom && window.pJSDom.length){
-    window.pJSDom.forEach(p => p.pJS.fn.vendors.destroypJS());
-    window.pJSDom = [];
-  }
-  initFerParticles(t);
-};
 
 async function impo(){
   const { value: userU } = await swalTheme.fire({
